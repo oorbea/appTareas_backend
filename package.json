@@ -1,0 +1,40 @@
+{
+  "name": "prioritease_backend",
+  "version": "1.0.0",
+  "description": "Task gestor app with innovative design",
+  "main": "source/app.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon source/app.mjs",
+    "start": "node source/app.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oorbea/appTareas_backend.git"
+  },
+  "keywords": [
+    "task",
+    "backend",
+    "node",
+    "express",
+    "js"
+  ],
+  "author": "Oriol Orbea",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oorbea/appTareas_backend/issues"
+  },
+  "homepage": "https://github.com/oorbea/appTareas_backend#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "prioritease_backend": "file:"
+  },
+  "devDependencies": {
+    "semistandard": "^17.0.0"
+  },
+  "eslintConfig": {
+    "extends": "semistandard"
+  }
+}
