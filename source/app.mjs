@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { authenticate } from './authenticate.mjs';
 import { connectDB, createTables } from './db.mjs';
@@ -35,13 +35,10 @@ app.post('/prioritease_api/register', async (req, res) => {
       return res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
     const newUser = await User.create({
       username,
       email,
-      password: hashedPassword,
+      password,
       picture
     });
 
@@ -62,19 +59,20 @@ app.post('/prioritease_api/register', async (req, res) => {
 });
 
 app.post('/prioritease_api/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Se requiere username y password' });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Se requiere email y password' });
   }
 
   try {
-    const user = await User.findOne({ where: { username } });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(401).json({ error: 'Usuario incorrecto' });
+      return res.status(401).json({ error: 'No hay usuarios con este email' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
@@ -87,8 +85,8 @@ app.post('/prioritease_api/login', async (req, res) => {
 
     return res.json({ message: 'Se ha iniciado correctamente la sesión', token });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    console.error('Error al iniciar sesión:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
   }
 });
 
