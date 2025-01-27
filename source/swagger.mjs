@@ -20,7 +20,16 @@ const options = {
         url: BASE_URL,
         description: 'Servidor local'
       }
-    ]
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
+    }
   },
   apis: ['./source/app.mjs']
 };

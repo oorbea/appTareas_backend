@@ -54,7 +54,7 @@ createTables();
  *             example:
  *               username: batman
  *               email: bruce.wayne@example.com
- *               password: password123
+ *               password: Password123
  *               picture: backend/profile_pictures/example.jpg
  *     responses:
  *       201:
@@ -145,7 +145,7 @@ app.post('/prioritease_api/register', async (req, res) => {
  *                 description: Contraseña del usuario
  *             example:
  *               email: bruce.wayne@example.com
- *               password: password123
+ *               password: Password123
  *     responses:
  *       200:
  *         description: Inicio de sesión exitoso
@@ -270,6 +270,116 @@ app.patch('/prioritease_api/disable', authenticate, async (req, res) => {
     return res.status(200).json({ message: 'Usuario dado de baja correctamente' });
   } catch (error) {
     console.error('Error al deshabilitar usuario:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/user:
+ *   put:
+ *     summary: Actualiza los atributos de un usuario
+ *     description: Modifica los atributos de un usuario existente en la base de datos.
+ *     security:
+ *       - bearerAuth: []  # Requiere autenticación mediante JWT
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Nombre de usuario
+ *               email:
+ *                 type: string
+ *                 description: Correo electrónico del usuario
+ *               password:
+ *                 type: string
+ *                 description: Contraseña del usuario
+ *               picture:
+ *                 type: string
+ *                 description: URL de la imagen de perfil del usuario
+ *             example:
+ *               username: batman
+ *               email: bruce.wayne@example.com
+ *               password: Newpassword123
+ *               picture: backend/profile_pictures/new_example.jpg
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario actualizado exitosamente
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     picture:
+ *                       type: string
+ *                     enabled:
+ *                       type: boolean
+ *       400:
+ *         description: Campos obligatorios faltantes
+ *       401:
+ *         description: No autorizado. El token no fue proporcionado o es inválido.
+ *       403:
+ *         description: Prohibido. El token es inválido o ha caducado
+ *       404:
+ *         description: Usuario no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+app.put('/prioritease_api/user', authenticate, async (req, res) => {
+  const result = validateUser(req.body);
+  if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
+
+  const { id } = req.user;
+  const { username, email, password, picture } = req.body;
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const updatedData = {
+      username: username ?? user.username,
+      email: email ?? user.email,
+      picture: picture ?? user.picture,
+      password
+    };
+
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser && existingUser.enabled && existingUser.id !== id) {
+      return res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
+    }
+
+    await user.update(updatedData);
+
+    return res.status(200).json({
+      message: 'Usuario actualizado exitosamente',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        picture: user.picture,
+        enabled: user.enabled
+      }
+    });
+  } catch (error) {
+    console.error('Error al actualizar usuario:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
   }
 });
