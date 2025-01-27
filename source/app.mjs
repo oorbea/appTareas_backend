@@ -7,6 +7,7 @@ import { authenticate } from './authenticate.mjs';
 import { connectDB, createTables } from './db.mjs';
 import { User } from './models/user.mjs';
 import { setupSwagger } from './swagger.mjs';
+import { validateUser } from './validations.mjs';
 
 dotenv.config();
 
@@ -86,23 +87,25 @@ createTables();
  *         description: Error interno del servidor
  */
 app.post('/prioritease_api/register', async (req, res) => {
-  const { username, email, password, picture } = req.body;
+  const result = validateUser(req.body);
+  if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
 
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: 'Los campos obligatorios (username, email, password) deben ser proporcionados.' });
-  }
+  const { username, email, password, picture } = req.body;
 
   try {
     const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
+    if (existingUser && existingUser.enabled) {
       return res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
     }
+
+    await User.destroy({ where: { email } });
 
     const newUser = await User.create({
       username,
       email,
       password,
-      picture
+      picture,
+      enabled: true
     });
 
     return res.status(201).json({
@@ -171,7 +174,7 @@ app.post('/prioritease_api/login', async (req, res) => {
 
   try {
     const user = await User.findOne({ where: { email } });
-    if (!user) {
+    if (!user || !user.enabled) {
       return res.status(401).json({ error: 'No hay usuarios con este email' });
     }
 
@@ -186,9 +189,87 @@ app.post('/prioritease_api/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    return res.json({ message: 'Se ha iniciado correctamente la sesión', token });
+    return res.status(200).json({ message: 'Se ha iniciado correctamente la sesión', token });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/disable:
+ *   patch:
+ *     summary: Da de baja a un usuario
+ *     description: |
+ *       Deshabilita un usuario en la base de datos utilizando su token de inicio de sesión.
+ *       El usuario debe estar autenticado y proporcionar un token JWT válido en el encabezado de la solicitud.
+ *     security:
+ *       - bearerAuth: []  # Requiere autenticación mediante JWT
+ *     responses:
+ *       200:
+ *         description: Usuario dado de baja correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario dado de baja correctamente
+ *       401:
+ *         description: No autorizado. El token no fue proporcionado o es inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no proporcionado
+ *       403:
+ *         description: Prohibido. El token es inválido o ha caducado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no válido o caducado
+ *       404:
+ *         description: Usuario no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Usuario no encontrado
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.patch('/prioritease_api/disable', authenticate, async (req, res) => {
+  const { id } = req.user;
+  try {
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    await user.update({ enabled: false });
+    return res.status(200).json({ message: 'Usuario dado de baja correctamente' });
+  } catch (error) {
+    console.error('Error al deshabilitar usuario:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
   }
 });

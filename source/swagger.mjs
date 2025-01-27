@@ -7,7 +7,6 @@ dotenv.config();
 const PORT = process.env.PORT ?? 5000;
 const BASE_URL = `http://localhost:${PORT}`;
 
-// Opciones de configuración para swagger-jsdoc
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -18,21 +17,19 @@ const options = {
     },
     servers: [
       {
-        url: BASE_URL, // Ajusta la URL base según tu entorno
+        url: BASE_URL,
         description: 'Servidor local'
       }
     ]
   },
-  apis: ['./source/app.mjs'] // Especifica el archivo donde están los endpoints documentados
+  apis: ['./source/app.mjs']
 };
 
-// Genera la especificación de Swagger
 const swaggerSpec = swaggerJsdoc(options);
 
 console.log('Especificación de Swagger:', swaggerSpec);
 
-// Función para configurar Swagger UI
-const setupSwagger = (app) => {
+const setupSwagger = app => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 };
 
