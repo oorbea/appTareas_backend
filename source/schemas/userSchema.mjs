@@ -1,17 +1,17 @@
 import z from 'zod';
 
 export const userSchema = z.object({
-  username: z.string({ message: 'Username must be a string' })
-    .max(30, { message: 'Username must be at most 30 characters long' })
-    .nonempty({ message: 'Username is required' }),
-  password: z.string({ message: 'Password must be a string' })
-    .max(100, { message: 'Password must be at most 100 characters long' })
-    .min(8, { message: 'Password must be at least 8 characters long' })
-    .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
-    .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
-    .regex(/[0-9]/, { message: 'Password must contain at least one number' })
-    .nonempty({ message: 'Password is required' }),
-  email: z.string({ message: 'Email must be a string' })
-    .email({ message: 'Email must be a valid email address' })
-    .nonempty({ message: 'Email is required' })
+  username: z.string({ message: 'El username debe ser un string' })
+    .max(30, { message: 'El username no puede exceder los 30 carácteres de longitud' })
+    .nonempty({ message: 'El username es obligatorio' }),
+  password: z.string({ message: 'El password debe ser un string' })
+    .max(100, { message: 'El password no puede exceder los 100 carácteres de longitud' })
+    .min(8, { message: 'El password debe ser de almenos 8 carácteres de longitud' })
+    .regex(/[A-Z]/, { message: 'El password debe contener almenos una letra mayúscula' })
+    .regex(/[a-z]/, { message: 'El password debe contener almenos una letra minúscula' })
+    .regex(/[0-9]/, { message: 'El password debe contener almenos un número' })
+    .nonempty({ message: 'El password es obligatorio' }),
+  email: z.string({ message: 'El email debe ser un string' })
+    .email({ message: 'El email debe ser una dirección de correo válida' })
+    .nonempty({ message: 'El email es obligatorio' })
 });
