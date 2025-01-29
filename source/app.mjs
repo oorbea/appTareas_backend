@@ -3,11 +3,14 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { Op } from 'sequelize';
 import { authenticate } from './authenticate.mjs';
 import { connectDB, createTables } from './db.mjs';
 import { User } from './models/user.mjs';
 import { setupSwagger } from './swagger.mjs';
-import { validateUser } from './validations.mjs';
+import { validateUser, validatePassword } from './validations.mjs';
+import { sendPasswordResetEmail } from './utils/emailSender.mjs';
+import { generateRandomNum } from './utils/randomNumberGenerator.mjs';
 
 dotenv.config();
 
@@ -32,6 +35,8 @@ createTables();
  *   post:
  *     summary: Registra un nuevo usuario
  *     description: Crea un nuevo usuario en la base de datos.
+ *     tags:
+ *      - Usuarios
  *     requestBody:
  *       required: true
  *       content:
@@ -130,6 +135,8 @@ app.post('/prioritease_api/register', async (req, res) => {
  *   post:
  *     summary: Inicia sesión de un usuario
  *     description: Autentica a un usuario y devuelve un token JWT.
+ *     tags:
+ *       - Usuarios
  *     requestBody:
  *       required: true
  *       content:
@@ -204,6 +211,8 @@ app.post('/prioritease_api/login', async (req, res) => {
  *     description: |
  *       Deshabilita un usuario en la base de datos utilizando su token de inicio de sesión.
  *       El usuario debe estar autenticado y proporcionar un token JWT válido en el encabezado de la solicitud.
+ *     tags:
+ *       - Usuarios
  *     security:
  *       - bearerAuth: []  # Requiere autenticación mediante JWT
  *     responses:
@@ -280,6 +289,8 @@ app.patch('/prioritease_api/disable', authenticate, async (req, res) => {
  *   put:
  *     summary: Actualiza los atributos de un usuario
  *     description: Modifica los atributos de un usuario existente en la base de datos.
+ *     tags:
+ *       - Usuarios
  *     security:
  *       - bearerAuth: []  # Requiere autenticación mediante JWT
  *     requestBody:
@@ -381,6 +392,181 @@ app.put('/prioritease_api/user', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Error al actualizar usuario:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/forgot_password:
+ *   post:
+ *     summary: Solicita un correo de restauración de contraseña.
+ *     description: Genera un código de restauración para la cuenta asociada al correo electrónico proporcionado y envía un correo con el código. El código tiene una validez de 15 minutos.
+ *     tags:
+ *       - Usuarios
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Correo electrónico asociado a la cuenta del usuario.
+ *                 example: barack.obama@example.com
+ *     responses:
+ *       200:
+ *         description: Correo de restauración enviado correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Correo de restauración enviado correctamente
+ *       404:
+ *         description: Usuario no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no encontrado
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.post('/prioritease_api/forgot_password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    const resetCode = generateRandomNum(10000000, 99999999);
+    const resetCodeExpiration = Date.now() + 900000; // 15 minutos de expiración
+
+    const updatedData = {
+      resetPasswordCode: resetCode,
+      resetPasswordExpires: resetCodeExpiration
+    };
+
+    await user.update(updatedData);
+
+    await sendPasswordResetEmail(email, resetCode);
+
+    return res.status(200).json({ message: 'Correo de restauración enviado correctamente' });
+  } catch (error) {
+    console.error('error: ', error);
+    return res.status(500).json({ message: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/reset_password:
+ *   patch:
+ *     summary: Restablece la contraseña de un usuario.
+ *     description: Permite a los usuarios restablecer su contraseña mediante un código de restauración válido. El código ha sido enviado previamente al correo electrónico del usuario y tiene un tiempo de expiración de 15 minutos.
+ *     tags:
+ *       - Usuarios
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               code:
+ *                 type: integer
+ *                 description: Código de restauración de contraseña enviado al correo electrónico (8 dígitos).
+ *                 example: 12345678
+ *               newPassword:
+ *                 type: string
+ *                 description: Nueva contraseña para la cuenta del usuario.
+ *                 example: "PasswordSuperSeguro123"
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Contraseña actualizada correctamente
+ *       400:
+ *         description: Solicitud inválida o código incorrecto/expirado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Código inválido o expirado
+ *                 error:
+ *                   type: string
+ *                   description: Mensaje de validación de contraseña.
+ *                   example: La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas y un número.
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error en el servidor
+ */
+app.patch('/prioritease_api/reset_password', async (req, res) => {
+  let { code } = req.body;
+  const { newPassword } = req.body;
+
+  const result = validatePassword({ password: newPassword });
+
+  if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
+
+  if (typeof code === 'string') code = parseInt(code);
+
+  try {
+    const user = await User.findOne({
+      where: {
+        resetPasswordCode: code,
+        resetPasswordExpires: { [Op.gt]: new Date() } // Código no expirado
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Código inválido o expirado' });
+    }
+
+    const updatedData = {
+      password: newPassword,
+      resetPasswordCode: null,
+      resetPasswordExpires: null
+    };
+
+    await user.update(updatedData);
+
+    res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('error: ', error);
+    res.status(500).json({ message: 'Error en el servidor' });
   }
 });
 

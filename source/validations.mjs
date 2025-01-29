@@ -1,7 +1,11 @@
-import { userSchema } from './schemas/userSchema.mjs';
+import { userSchema, passwordSchema } from './schemas/userSchema.mjs';
 
 function validateUser (user) {
   return userSchema.safeParse(user);
 }
 
-export { validateUser };
+function validatePassword (password) {
+  return passwordSchema.safeParse(password);
+}
+
+export { validateUser, validatePassword };
