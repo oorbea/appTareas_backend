@@ -21,7 +21,10 @@ export const User = sequelize.define('User', {
     type: DataTypes.TEXT,
     allowNull: false
   },
-  picture: DataTypes.TEXT,
+  picture: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   enabled: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
