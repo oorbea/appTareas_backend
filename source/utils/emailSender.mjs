@@ -94,7 +94,7 @@ async function sendPasswordResetEmail (email, token) {
 
                 <div class="content">
                     <p>Hola ${username},</p>
-                    <p>Hemos recibido una solicitud para restablecer tu contraseña. Utiliza el siguiente código para completar el proceso:</p>
+                    <p>Hemos recibido una solicitud para restablecer tu contraseña. Utiliza el siguiente código en los próximos 15 minutos para completar el proceso:</p>
 
                     <div class="code">
                         ${token}
