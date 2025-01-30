@@ -450,7 +450,7 @@ app.post('/prioritease_api/forgot_password', async (req, res) => {
   const { email } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
     if (!user || !user.enabled) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
