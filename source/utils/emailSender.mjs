@@ -21,7 +21,7 @@ async function sendPasswordResetEmail (email, token) {
   const user = await User.findOne({ where: { email, enabled: true } });
   const username = user ? user.username : 'Usuario';
   const mailOptions = {
-    from: EMAIL_USER,
+    from: 'prioritease.noreply',
     to: email,
     subject: 'Restablecer Contraseña',
     html: `
@@ -46,12 +46,6 @@ async function sendPasswordResetEmail (email, token) {
                     border-radius: 8px;
                     overflow: hidden;
                 }
-                .header {
-                    background-color: #007bff;
-                    color: #ffffff;
-                    text-align: center;
-                    padding: 20px;
-                }
                 .content {
                     padding: 20px;
                     color: #333333;
@@ -66,17 +60,6 @@ async function sendPasswordResetEmail (email, token) {
                     border: 1px solid #dddddd;
                     border-radius: 4px;
                 }
-                .button {
-                    display: block;
-                    width: 200px;
-                    margin: 20px auto;
-                    padding: 10px;
-                    text-align: center;
-                    background-color: #007bff;
-                    color: #ffffff;
-                    text-decoration: none;
-                    border-radius: 4px;
-                }
                 .footer {
                     text-align: center;
                     padding: 10px;
@@ -88,10 +71,6 @@ async function sendPasswordResetEmail (email, token) {
         </head>
         <body>
             <div class="email-container">
-                <div class="header">
-                    <h1>Restablecer Contraseña</h1>
-                </div>
-
                 <div class="content">
                     <p>Hola ${username},</p>
                     <p>Hemos recibido una solicitud para restablecer tu contraseña. Utiliza el siguiente código en los próximos 15 minutos para completar el proceso:</p>
