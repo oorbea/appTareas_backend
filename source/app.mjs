@@ -361,7 +361,7 @@ app.put('/prioritease_api/user', authenticate, async (req, res) => {
 
   try {
     const user = await User.findByPk(id);
-    if (!user) {
+    if (!user || !user.enabled) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
@@ -451,7 +451,7 @@ app.post('/prioritease_api/forgot_password', async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) {
+    if (!user || !user.enabled) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
@@ -489,6 +489,10 @@ app.post('/prioritease_api/forgot_password', async (req, res) => {
  *           schema:
  *             type: object
  *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Correo electrónico asociado a la cuenta del usuario.
+ *                 example: peter.parker@example.com
  *               code:
  *                 type: integer
  *                 description: Código de restauración de contraseña enviado al correo electrónico (8 dígitos).
@@ -535,7 +539,7 @@ app.post('/prioritease_api/forgot_password', async (req, res) => {
  */
 app.patch('/prioritease_api/reset_password', async (req, res) => {
   let { code } = req.body;
-  const { newPassword } = req.body;
+  const { email, newPassword } = req.body;
 
   const result = validatePassword({ password: newPassword });
 
@@ -546,12 +550,13 @@ app.patch('/prioritease_api/reset_password', async (req, res) => {
   try {
     const user = await User.findOne({
       where: {
+        email,
         resetPasswordCode: code,
         resetPasswordExpires: { [Op.gt]: new Date() } // Código no expirado
       }
     });
 
-    if (!user) {
+    if (!user || !user.enabled) {
       return res.status(400).json({ message: 'Código inválido o expirado' });
     }
 
