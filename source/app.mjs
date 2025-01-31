@@ -4,9 +4,10 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
-import { authenticate } from './authenticate.mjs';
+import { authenticatePublic, authenticateAdmin } from './authenticate.mjs';
 import { connectDB, createTables } from './db.mjs';
 import { User } from './models/user.mjs';
+import { Admin, createAdmin } from './models/admin.mjs';
 import { setupSwagger } from './swagger.mjs';
 import { validateUser, validatePassword } from './validations.mjs';
 import { sendPasswordResetEmail } from './utils/emailSender.mjs';
@@ -19,8 +20,6 @@ app.disable('x-powered-by');
 app.use(cors());
 app.use(express.json());
 
-setupSwagger(app);
-
 const PORT = process.env.PORT ?? 5000;
 const BASE_URL = `http://localhost:${PORT}`;
 
@@ -28,10 +27,11 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 connectDB();
 createTables();
+createAdmin();
 
 /**
  * @swagger
- * /prioritease_api/register:
+ * /prioritease_api/user/register:
  *   post:
  *     summary: Registra un nuevo usuario
  *     description: Crea un nuevo usuario en la base de datos.
@@ -91,7 +91,7 @@ createTables();
  *       500:
  *         description: Error interno del servidor
  */
-app.post('/prioritease_api/register', async (req, res) => {
+app.post('/prioritease_api/user/register', async (req, res) => {
   const result = validateUser(req.body);
   if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
 
@@ -131,7 +131,7 @@ app.post('/prioritease_api/register', async (req, res) => {
 
 /**
  * @swagger
- * /prioritease_api/login:
+ * /prioritease_api/user/login:
  *   post:
  *     summary: Inicia sesión de un usuario
  *     description: Autentica a un usuario y devuelve un token JWT.
@@ -172,7 +172,7 @@ app.post('/prioritease_api/register', async (req, res) => {
  *       500:
  *         description: Error interno del servidor
  */
-app.post('/prioritease_api/login', async (req, res) => {
+app.post('/prioritease_api/user/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -205,7 +205,7 @@ app.post('/prioritease_api/login', async (req, res) => {
 
 /**
  * @swagger
- * /prioritease_api/disable:
+ * /prioritease_api/user/disable:
  *   patch:
  *     summary: Da de baja a un usuario
  *     description: |
@@ -267,7 +267,7 @@ app.post('/prioritease_api/login', async (req, res) => {
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-app.patch('/prioritease_api/disable', authenticate, async (req, res) => {
+app.patch('/prioritease_api/user/disable', authenticatePublic, async (req, res) => {
   const { id } = req.user;
   try {
     const user = await User.findByPk(id);
@@ -352,7 +352,7 @@ app.patch('/prioritease_api/disable', authenticate, async (req, res) => {
  *       500:
  *         description: Error interno del servidor
  */
-app.put('/prioritease_api/user', authenticate, async (req, res) => {
+app.put('/prioritease_api/user', authenticatePublic, async (req, res) => {
   const result = validateUser(req.body);
   if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
 
@@ -397,7 +397,7 @@ app.put('/prioritease_api/user', authenticate, async (req, res) => {
 
 /**
  * @swagger
- * /prioritease_api/forgot_password:
+ * /prioritease_api/user/forgot_password:
  *   post:
  *     summary: Solicita un correo de restauración de contraseña.
  *     description: Genera un código de restauración para la cuenta asociada al correo electrónico proporcionado y envía un correo con el código. El código tiene una validez de 15 minutos.
@@ -446,7 +446,7 @@ app.put('/prioritease_api/user', authenticate, async (req, res) => {
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-app.post('/prioritease_api/forgot_password', async (req, res) => {
+app.post('/prioritease_api/user/forgot_password', async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -476,7 +476,7 @@ app.post('/prioritease_api/forgot_password', async (req, res) => {
 
 /**
  * @swagger
- * /prioritease_api/reset_password:
+ * /prioritease_api/user/reset_password:
  *   patch:
  *     summary: Restablece la contraseña de un usuario.
  *     description: Permite a los usuarios restablecer su contraseña mediante un código de restauración válido. El código ha sido enviado previamente al correo electrónico del usuario y tiene un tiempo de expiración de 15 minutos.
@@ -537,7 +537,7 @@ app.post('/prioritease_api/forgot_password', async (req, res) => {
  *                   type: string
  *                   example: Error en el servidor
  */
-app.patch('/prioritease_api/reset_password', async (req, res) => {
+app.patch('/prioritease_api/user/reset_password', async (req, res) => {
   let { code } = req.body;
   const { email, newPassword } = req.body;
 
@@ -574,6 +574,233 @@ app.patch('/prioritease_api/reset_password', async (req, res) => {
     res.status(500).json({ message: 'Error en el servidor' });
   }
 });
+
+/**
+ * @swagger
+ * /prioritease_api/user/{id}:
+ *   get:
+ *     summary: Obtiene la información de un usuario específico.
+ *     description: Retorna los detalles de un usuario basado en su ID, siempre y cuando el usuario esté habilitado.
+ *     tags:
+ *       - Usuarios
+ *     security:
+ *       - bearerAuth: []  # Requiere autenticación mediante JWT
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del usuario a buscar.
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Información del usuario obtenida correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: ID del usuario.
+ *                 username:
+ *                   type: string
+ *                   description: Nombre de usuario.
+ *                 email:
+ *                   type: string
+ *                   description: Correo electrónico del usuario.
+ *                 picture:
+ *                   type: string
+ *                   description: URL de la imagen de perfil del usuario.
+ *       401:
+ *         description: No autorizado. El token no fue proporcionado.
+ *       403:
+ *         description: No autorizado. El token es inválido o está caducado.
+ *       404:
+ *         description: Usuario no encontrado o no habilitado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Usuario no encontrado"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Ha ocurrido un error inesperado en el servidor"
+ */
+app.get('/prioritease_api/user/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user || !user.enabled) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    return res.status(200).json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      picture: user.picture
+    });
+  } catch (error) {
+    console.error('Error al obtener usuario:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/user:
+ *   get:
+ *     summary: Obtiene una lista de todos los usuarios habilitados.
+ *     description: Retorna una lista de usuarios habilitados con sus detalles básicos (ID, nombre de usuario, correo electrónico y foto de perfil).
+ *     tags:
+ *       - Usuarios
+ *     security:
+ *       - bearerAuth: []  # Requiere autenticación mediante JWT
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios habilitados obtenida correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID del usuario.
+ *                   username:
+ *                     type: string
+ *                     description: Nombre de usuario.
+ *                   email:
+ *                     type: string
+ *                     description: Correo electrónico del usuario.
+ *                   picture:
+ *                     type: string
+ *                     description: URL de la imagen de perfil del usuario.
+ *       401:
+ *         description: No autorizado. El token no fue proporcionado.
+ *       403:
+ *         description: No autorizado. El token es inválido o está caducado.
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Ha ocurrido un error inesperado en el servidor"
+ */
+app.get('/prioritease_api/user', authenticateAdmin, async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: ['id', 'username', 'email', 'picture'],
+      where: { enabled: true }
+    });
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/admin/login:
+ *   post:
+ *     summary: Iniciar sesión como administrador.
+ *     description: Permite a un administrador autenticarse proporcionando un nombre de usuario y una contraseña. Si las credenciales son correctas, se devuelve un token JWT válido por 24 horas.
+ *     tags:
+ *       - Admin
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Nombre de usuario del administrador.
+ *                 example: "admin123"
+ *               password:
+ *                 type: string
+ *                 description: Contraseña del administrador.
+ *                 example: "SuperSecreta123!"
+ *     responses:
+ *       200:
+ *         description: Inicio de sesión exitoso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Inicio de sesión exitoso
+ *                 token:
+ *                   type: string
+ *                   description: Token JWT generado para autenticación.
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       401:
+ *         description: Credenciales incorrectas.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Usuario no encontrado o Contraseña incorrecta
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.post('/prioritease_api/admin/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const admin = await Admin.findOne({ where: { username } });
+    if (!admin) {
+      return res.status(401).json({ error: 'Usuario no encontrado' });
+    }
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Contraseña incorrecta' });
+    }
+    const token = jwt.sign({ username: admin.username }, JWT_SECRET, { expiresIn: '24h' });
+    return res.status(200).json({ message: 'Inicio de sesión exitoso', token });
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.send('<h1>API PrioritEase</h1>');
+});
+
+setupSwagger(app);
 
 app.use((req, res) => {
   res.status(404).send('<h1>404 - Página no encontrada</h1>');

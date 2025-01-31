@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 5000
 
 # Comando para ejecutar la aplicación (usando app.mjs como punto de entrada)
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]

@@ -8,12 +8,12 @@ const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
 const dbHost = process.env.DB_HOST;
 
-const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
+export const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
   dialect: 'mysql'
 });
 
-async function connectDB () {
+export async function connectDB () {
   try {
     await sequelize.authenticate();
     console.log('Connection to database has been established successfully.');
@@ -22,8 +22,6 @@ async function connectDB () {
   }
 }
 
-async function createTables () {
+export async function createTables () {
   await sequelize.sync();
 }
-
-export { sequelize, connectDB, createTables };
