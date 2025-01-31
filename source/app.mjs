@@ -582,7 +582,7 @@ app.patch('/prioritease_api/user/reset_password', async (req, res) => {
  *     summary: Obtiene la información de un usuario específico.
  *     description: Retorna los detalles de un usuario basado en su ID, siempre y cuando el usuario esté habilitado.
  *     tags:
- *       - Usuarios
+ *       - Usuarios (admin)
  *     security:
  *       - bearerAuth: []  # Requiere autenticación mediante JWT
  *     parameters:
@@ -665,7 +665,7 @@ app.get('/prioritease_api/user/:id', authenticateAdmin, async (req, res) => {
  *     summary: Obtiene una lista de todos los usuarios habilitados.
  *     description: Retorna una lista de usuarios habilitados con sus detalles básicos (ID, nombre de usuario, correo electrónico y foto de perfil).
  *     tags:
- *       - Usuarios
+ *       - Usuarios (admin)
  *     security:
  *       - bearerAuth: []  # Requiere autenticación mediante JWT
  *     responses:
