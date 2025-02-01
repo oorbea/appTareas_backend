@@ -4,14 +4,14 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
-import { authenticatePublic, authenticateAdmin } from './authenticate.mjs';
+import { authenticate } from './authenticate.mjs';
 import { connectDB, createTables } from './db.mjs';
-import { User } from './models/user.mjs';
-import { Admin, createAdmin } from './models/admin.mjs';
+import { User, createAdmin } from './models/user.mjs';
 import { setupSwagger } from './swagger.mjs';
-import { validateUser, validatePassword } from './validations.mjs';
+import { validateUser, validateUsername, validatePassword, validateEmail } from './validations.mjs';
 import { sendPasswordResetEmail } from './utils/emailSender.mjs';
 import { generateRandomNum } from './utils/randomNumberGenerator.mjs';
+import { uploadImage } from './utils/upload.mjs';
 
 dotenv.config();
 
@@ -25,9 +25,14 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-connectDB();
-createTables();
-createAdmin();
+try {
+  await connectDB();
+  console.log('Connection to database has been established successfully.');
+  await createTables();
+  await createAdmin();
+} catch (error) {
+  console.error('Error connecting to database:', error);
+}
 
 /**
  * @swagger
@@ -37,6 +42,7 @@ createAdmin();
  *     description: Crea un nuevo usuario en la base de datos.
  *     tags:
  *      - Usuarios
+ *      - Public
  *     requestBody:
  *       required: true
  *       content:
@@ -60,7 +66,7 @@ createAdmin();
  *               username: batman
  *               email: bruce.wayne@example.com
  *               password: Password123
- *               picture: backend/profile_pictures/example.jpg
+ *               picture: public/profile_pictures/example.jpg
  *     responses:
  *       201:
  *         description: Usuario registrado exitosamente
@@ -110,6 +116,7 @@ app.post('/prioritease_api/user/register', async (req, res) => {
       email,
       password,
       picture,
+      admin: false,
       enabled: true
     });
 
@@ -120,6 +127,7 @@ app.post('/prioritease_api/user/register', async (req, res) => {
         username: newUser.username,
         email: newUser.email,
         picture: newUser.picture,
+        admin: newUser.admin,
         enabled: newUser.enabled
       }
     });
@@ -137,6 +145,7 @@ app.post('/prioritease_api/user/register', async (req, res) => {
  *     description: Autentica a un usuario y devuelve un token JWT.
  *     tags:
  *       - Usuarios
+ *       - Public
  *     requestBody:
  *       required: true
  *       content:
@@ -191,7 +200,7 @@ app.post('/prioritease_api/user/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, email: user.email },
+      { id: user.id, username: user.username, email: user.email, admin: user.admin },
       JWT_SECRET,
       { expiresIn: '1h' }
     );
@@ -209,10 +218,11 @@ app.post('/prioritease_api/user/login', async (req, res) => {
  *   patch:
  *     summary: Da de baja a un usuario
  *     description: |
- *       Deshabilita un usuario en la base de datos utilizando su token de inicio de sesión.
+ *       El usuario se deshabilita en la base de datos utilizando su token de inicio de sesión.
  *       El usuario debe estar autenticado y proporcionar un token JWT válido en el encabezado de la solicitud.
  *     tags:
  *       - Usuarios
+ *       - Public
  *     security:
  *       - bearerAuth: []  # Requiere autenticación mediante JWT
  *     responses:
@@ -267,7 +277,7 @@ app.post('/prioritease_api/user/login', async (req, res) => {
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-app.patch('/prioritease_api/user/disable', authenticatePublic, async (req, res) => {
+app.patch('/prioritease_api/user/disable', authenticate, async (req, res) => {
   const { id } = req.user;
   try {
     const user = await User.findByPk(id);
@@ -285,12 +295,340 @@ app.patch('/prioritease_api/user/disable', authenticatePublic, async (req, res) 
 
 /**
  * @swagger
+ * /prioritease_api/user/disable/{id}:
+ *   patch:
+ *     summary: Da de baja a un usuario
+ *     description: |
+ *       El usuario se deshabilita en la base de datos utilizando un token de inicio de sesión de administrador.
+ *       El admin debe estar autenticado y proporcionar un token JWT válido en el encabezado de la solicitud.
+ *     tags:
+ *       - Usuarios
+ *       - Admin
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del usuario a dar de baja.
+ *         schema:
+ *           type: integer
+ *     security:
+ *       - bearerAuth: []  # Requiere autenticación de admin mediante JWT
+ *     responses:
+ *       200:
+ *         description: Usuario dado de baja correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario dado de baja correctamente
+ *       401:
+ *         description: No autorizado. El token no fue proporcionado o es inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no proporcionado
+ *       403:
+ *         description: Prohibido. El token es inválido o ha caducado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no válido o caducado
+ *       404:
+ *         description: Usuario no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Usuario no encontrado
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.patch('/prioritease_api/user/disable/:id', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  const { id } = req.params;
+  try {
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    await user.update({ enabled: false });
+    return res.status(200).json({ message: 'Usuario dado de baja correctamente' });
+  } catch (error) {
+    console.error('Error al deshabilitar usuario:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/user/upload_picture:
+ *   post:
+ *     summary: Sube una foto de perfil para el usuario autenticado.
+ *     description: Permite a un usuario autenticado subir una foto de perfil. La imagen se guarda en el servidor y se actualiza la URL en la base de datos.
+ *     tags:
+ *       - Usuarios
+ *       - Public
+ *     security:
+ *       - bearerAuth: [] # Requiere autenticación mediante JWT
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               profilePicture:
+ *                 type: string
+ *                 format: binary
+ *                 description: Archivo de imagen (JPEG, PNG, GIF) para la foto de perfil.
+ *     responses:
+ *       200:
+ *         description: Imagen de perfil subida correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Imagen de perfil subida correctamente
+ *                 picture:
+ *                   type: string
+ *                   example: public/uploads/1234567890-image.jpg
+ *       400:
+ *         description: No se proporcionó un archivo o el archivo no es válido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No se proporcionó un archivo
+ *       401:
+ *         description: Token no proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No autorizado
+ *       403:
+ *         description: Token no válido o caducado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No autorizado
+ *       404:
+ *         description: Usuario no encontrado o deshabilitado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Usuario no encontrado o deshabilitado
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.post('/prioritease_api/user/upload_picture', authenticate, uploadImage.single('profilePicture'), async (req, res) => {
+  const { id } = req.user;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: 'No se proporcionó un archivo' });
+  }
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user || !user.enabled) {
+      return res.status(404).json({ error: 'Usuario no encontrado o deshabilitado' });
+    }
+
+    const picturePath = file.path;
+    await user.update({ picture: picturePath });
+
+    return res.status(200).json({
+      message: 'Imagen de perfil subida correctamente',
+      picture: picturePath
+    });
+  } catch (error) {
+    console.error('Error al subir imagen de perfil:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/user/upload_picture/{id}:
+ *   post:
+ *     summary: Sube una foto de perfil para un usuario cualquiera.
+ *     description: Permite a un administrador autenticado subir una foto de perfil para un usuario. La imagen se guarda en el servidor y se actualiza la URL en la base de datos.
+ *     tags:
+ *       - Usuarios
+ *       - Admin
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del usuario al que se le subirá la foto de perfil.
+ *         schema:
+ *           type: integer
+ *     security:
+ *       - bearerAuth: [] # Requiere autenticación de admin mediante JWT
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               profilePicture:
+ *                 type: string
+ *                 format: binary
+ *                 description: Archivo de imagen (JPEG, PNG, GIF) para la foto de perfil.
+ *     responses:
+ *       200:
+ *         description: Imagen de perfil subida correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Imagen de perfil subida correctamente
+ *                 picture:
+ *                   type: string
+ *                   example: public/uploads/1234567890-image.jpg
+ *       400:
+ *         description: No se proporcionó un archivo o el archivo no es válido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No se proporcionó un archivo
+ *       401:
+ *         description: Token no proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No autorizado
+ *       403:
+ *         description: Token no válido o caducado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No autorizado
+ *       404:
+ *         description: Usuario no encontrado o deshabilitado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Usuario no encontrado o deshabilitado
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.post('/prioritease_api/user/upload_picture/:id', authenticate, uploadImage.single('profilePicture'), async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  const { id } = req.params;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: 'No se proporcionó un archivo' });
+  }
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user || !user.enabled) {
+      return res.status(404).json({ error: 'Usuario no encontrado o deshabilitado' });
+    }
+
+    const picturePath = file.path;
+    await user.update({ picture: picturePath });
+
+    return res.status(200).json({
+      message: 'Imagen de perfil subida correctamente',
+      picture: picturePath
+    });
+  } catch (error) {
+    console.error('Error al subir imagen de perfil:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
  * /prioritease_api/user:
  *   put:
  *     summary: Actualiza los atributos de un usuario
- *     description: Modifica los atributos de un usuario existente en la base de datos.
+ *     description: Modifica los atributos de un usuario autenticado si existe en la base de datos.
  *     tags:
  *       - Usuarios
+ *       - Public
  *     security:
  *       - bearerAuth: []  # Requiere autenticación mediante JWT
  *     requestBody:
@@ -303,20 +641,24 @@ app.patch('/prioritease_api/user/disable', authenticatePublic, async (req, res) 
  *               username:
  *                 type: string
  *                 description: Nombre de usuario
+ *                 required: false
  *               email:
  *                 type: string
  *                 description: Correo electrónico del usuario
+ *                 required: false
  *               password:
  *                 type: string
  *                 description: Contraseña del usuario
+ *                 required: false
  *               picture:
  *                 type: string
  *                 description: URL de la imagen de perfil del usuario
+ *                 required: false
  *             example:
  *               username: batman
  *               email: bruce.wayne@example.com
  *               password: Newpassword123
- *               picture: backend/profile_pictures/new_example.jpg
+ *               picture: public/profile_pictures/new_example.jpg
  *     responses:
  *       200:
  *         description: Usuario actualizado exitosamente
@@ -352,12 +694,24 @@ app.patch('/prioritease_api/user/disable', authenticatePublic, async (req, res) 
  *       500:
  *         description: Error interno del servidor
  */
-app.put('/prioritease_api/user', authenticatePublic, async (req, res) => {
-  const result = validateUser(req.body);
-  if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
+app.put('/prioritease_api/user', authenticate, async (req, res) => {
+  if (!req.body) return res.status(400).json({ error: 'No se proporcionaron datos para actualizar' });
 
   const { id } = req.user;
   const { username, email, password, picture } = req.body;
+
+  if (username) {
+    const usernameValidation = validateUsername({ username: req.body.username });
+    if (usernameValidation.error) return res.status(400).json({ error: usernameValidation.error.issues[0].message });
+  }
+  if (password) {
+    const passwordValidation = validatePassword({ password: req.body.password });
+    if (passwordValidation.error) return res.status(400).json({ error: passwordValidation.error.issues[0].message });
+  }
+  if (email) {
+    const emailValidation = validateEmail({ email: req.body.email });
+    if (emailValidation.error) return res.status(400).json({ error: emailValidation.error.issues[0].message });
+  }
 
   try {
     const user = await User.findByPk(id);
@@ -368,9 +722,144 @@ app.put('/prioritease_api/user', authenticatePublic, async (req, res) => {
     const updatedData = {
       username: username ?? user.username,
       email: email ?? user.email,
-      picture: picture ?? user.picture,
-      password
+      picture: picture ?? user.picture
     };
+    if (password) {
+      updatedData.password = password;
+    }
+
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser && existingUser.enabled && existingUser.id !== id) {
+      return res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
+    }
+
+    await user.update(updatedData);
+
+    return res.status(200).json({
+      message: 'Usuario actualizado exitosamente',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        picture: user.picture,
+        enabled: user.enabled
+      }
+    });
+  } catch (error) {
+    console.error('Error al actualizar usuario:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/user/{id}:
+ *   put:
+ *     summary: Actualiza los atributos de un usuario
+ *     description: Modifica los atributos de un usuario existente en la base de datos.
+ *     tags:
+ *       - Usuarios
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []  # Requiere autenticación de admin mediante JWT
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Nombre de usuario
+ *                 required: false
+ *               email:
+ *                 type: string
+ *                 description: Correo electrónico del usuario
+ *                 required: false
+ *               password:
+ *                 type: string
+ *                 description: Contraseña del usuario
+ *                 required: false
+ *               picture:
+ *                 type: string
+ *                 description: URL de la imagen de perfil del usuario
+ *                 required: false
+ *             example:
+ *               username: batman
+ *               email: bruce.wayne@example.com
+ *               password: Newpassword123
+ *               picture: public/profile_pictures/new_example.jpg
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario actualizado exitosamente
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     picture:
+ *                       type: string
+ *                     enabled:
+ *                       type: boolean
+ *       400:
+ *         description: Campos obligatorios faltantes
+ *       401:
+ *         description: No autorizado. El token no fue proporcionado o es inválido.
+ *       403:
+ *         description: Prohibido. El token es inválido o ha caducado
+ *       404:
+ *         description: Usuario no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+app.put('/prioritease_api/user/:id', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  if (!req.body) return res.status(400).json({ error: 'No se proporcionaron datos para actualizar' });
+
+  const { id } = req.params;
+  const { username, email, password, picture } = req.body;
+
+  if (username) {
+    const usernameValidation = validateUsername({ username: req.body.username });
+    if (usernameValidation.error) return res.status(400).json({ error: usernameValidation.error.issues[0].message });
+  }
+  if (password) {
+    const passwordValidation = validatePassword({ password: req.body.password });
+    if (passwordValidation.error) return res.status(400).json({ error: passwordValidation.error.issues[0].message });
+  }
+  if (email) {
+    const emailValidation = validateEmail({ email: req.body.email });
+    if (emailValidation.error) return res.status(400).json({ error: emailValidation.error.issues[0].message });
+  }
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user || !user.enabled) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const updatedData = {
+      username: username ?? user.username,
+      email: email ?? user.email,
+      picture: picture ?? user.picture
+    };
+    if (password) {
+      updatedData.password = password;
+    }
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser && existingUser.enabled && existingUser.id !== id) {
@@ -403,6 +892,7 @@ app.put('/prioritease_api/user', authenticatePublic, async (req, res) => {
  *     description: Genera un código de restauración para la cuenta asociada al correo electrónico proporcionado y envía un correo con el código. El código tiene una validez de 15 minutos.
  *     tags:
  *       - Usuarios
+ *       - Public
  *     requestBody:
  *       required: true
  *       content:
@@ -482,6 +972,7 @@ app.post('/prioritease_api/user/forgot_password', async (req, res) => {
  *     description: Permite a los usuarios restablecer su contraseña mediante un código de restauración válido. El código ha sido enviado previamente al correo electrónico del usuario y tiene un tiempo de expiración de 15 minutos.
  *     tags:
  *       - Usuarios
+ *       - Public
  *     requestBody:
  *       required: true
  *       content:
@@ -582,9 +1073,10 @@ app.patch('/prioritease_api/user/reset_password', async (req, res) => {
  *     summary: Obtiene la información de un usuario específico.
  *     description: Retorna los detalles de un usuario basado en su ID, siempre y cuando el usuario esté habilitado.
  *     tags:
- *       - Usuarios (admin)
+ *       - Usuarios
+ *       - Admin
  *     security:
- *       - bearerAuth: []  # Requiere autenticación mediante JWT
+ *       - bearerAuth: []  # Requiere autenticación de admin mediante JWT
  *     parameters:
  *       - in: path
  *         name: id
@@ -637,7 +1129,9 @@ app.patch('/prioritease_api/user/reset_password', async (req, res) => {
  *                   type: string
  *                   example: "Ha ocurrido un error inesperado en el servidor"
  */
-app.get('/prioritease_api/user/:id', authenticateAdmin, async (req, res) => {
+app.get('/prioritease_api/user/:id', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
   const { id } = req.params;
 
   try {
@@ -665,9 +1159,10 @@ app.get('/prioritease_api/user/:id', authenticateAdmin, async (req, res) => {
  *     summary: Obtiene una lista de todos los usuarios habilitados.
  *     description: Retorna una lista de usuarios habilitados con sus detalles básicos (ID, nombre de usuario, correo electrónico y foto de perfil).
  *     tags:
- *       - Usuarios (admin)
+ *       - Usuarios
+ *       - Admin
  *     security:
- *       - bearerAuth: []  # Requiere autenticación mediante JWT
+ *       - bearerAuth: []  # Requiere autenticación de admin mediante JWT
  *     responses:
  *       200:
  *         description: Lista de usuarios habilitados obtenida correctamente.
@@ -705,7 +1200,9 @@ app.get('/prioritease_api/user/:id', authenticateAdmin, async (req, res) => {
  *                   type: string
  *                   example: "Ha ocurrido un error inesperado en el servidor"
  */
-app.get('/prioritease_api/user', authenticateAdmin, async (req, res) => {
+app.get('/prioritease_api/user', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
   try {
     const users = await User.findAll({
       attributes: ['id', 'username', 'email', 'picture'],
@@ -780,15 +1277,15 @@ app.get('/prioritease_api/user', authenticateAdmin, async (req, res) => {
 app.post('/prioritease_api/admin/login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const admin = await Admin.findOne({ where: { username } });
-    if (!admin) {
+    const admin = await User.findOne({ where: { username, email: process.env.ADMIN_EMAIL } });
+    if (!admin || !admin.enabled) {
       return res.status(401).json({ error: 'Usuario no encontrado' });
     }
     const isPasswordValid = await bcrypt.compare(password, admin.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
-    const token = jwt.sign({ username: admin.username }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: admin.id, username: admin.username, email: admin.email, admin: admin.admin }, JWT_SECRET, { expiresIn: '24h' });
     return res.status(200).json({ message: 'Inicio de sesión exitoso', token });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
@@ -797,6 +1294,10 @@ app.post('/prioritease_api/admin/login', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  res.send('<h1>API PrioritEase</h1>');
+});
+
+app.get('/prioritease_api', (req, res) => {
   res.send('<h1>API PrioritEase</h1>');
 });
 

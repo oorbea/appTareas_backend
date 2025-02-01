@@ -15,13 +15,12 @@ export const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
 
 export async function connectDB () {
   try {
-    await sequelize.authenticate();
-    console.log('Connection to database has been established successfully.');
+    return sequelize.authenticate();
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }
 }
 
-export async function createTables () {
-  await sequelize.sync();
+export function createTables () {
+  return sequelize.sync({ alter: true });
 }

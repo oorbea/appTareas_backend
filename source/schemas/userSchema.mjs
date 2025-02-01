@@ -16,4 +16,8 @@ export const userSchema = z.object({
     .nonempty({ message: 'El email es obligatorio' })
 });
 
+export const usernameSchema = z.object({}).merge(userSchema.pick({ username: true }));
+
 export const passwordSchema = z.object({}).merge(userSchema.pick({ password: true }));
+
+export const emailSchema = z.object({}).merge(userSchema.pick({ email: true }));

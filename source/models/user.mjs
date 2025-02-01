@@ -1,6 +1,9 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../db.mjs';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export const User = sequelize.define('User', {
   id: {
@@ -37,6 +40,11 @@ export const User = sequelize.define('User', {
   resetPasswordExpires: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  admin: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
   }
 }, {
   hooks: {
@@ -54,3 +62,21 @@ export const User = sequelize.define('User', {
     }
   }
 });
+
+export function createAdmin () {
+  return User.findOrCreate({
+    where: { email: process.env.ADMIN_EMAIL },
+    defaults: {
+      password: process.env.ADMIN_PASSWORD,
+      admin: true,
+      username: process.env.ADMIN_USERNAME,
+      email: process.env.ADMIN_EMAIL
+    }
+  })
+    .then(() => {
+      console.log('Admin created successfully');
+    })
+    .catch((error) => {
+      console.error('Error creating admin:', error);
+    });
+}
