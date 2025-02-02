@@ -7,8 +7,9 @@ import { Op } from 'sequelize';
 import { authenticate } from './authenticate.mjs';
 import { connectDB, createTables } from './db.mjs';
 import { User, createAdmin } from './models/user.mjs';
+import { TaskList } from './models/taskList.mjs';
 import { setupSwagger } from './swagger.mjs';
-import { validateUser, validateUsername, validatePassword, validateEmail } from './validations.mjs';
+import { validateUser, validateUsername, validatePassword, validateEmail, validateTaskList } from './validations.mjs';
 import { sendPasswordResetEmail } from './utils/emailSender.mjs';
 import { generateRandomNum } from './utils/randomNumberGenerator.mjs';
 import { uploadImage } from './utils/upload.mjs';
@@ -115,7 +116,7 @@ app.post('/prioritease_api/user/register', async (req, res) => {
       username,
       email,
       password,
-      picture,
+      picture: picture ?? null,
       admin: false,
       enabled: true
     });
@@ -1289,6 +1290,21 @@ app.post('/prioritease_api/admin/login', async (req, res) => {
     return res.status(200).json({ message: 'Inicio de sesión exitoso', token });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+app.post('/prioritease_api/task_list', authenticate, async (req, res) => {
+  const user = req.user.id;
+  const { name } = req.body;
+  const result = validateTaskList({ name });
+  if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
+
+  try {
+    const taskList = await TaskList.create({ name, user });
+    return res.status(201).json({ message: 'Lista de tareas creada exitosamente', taskList });
+  } catch (error) {
+    console.error('Error al crear lista de tareas:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
   }
 });
