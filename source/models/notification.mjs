@@ -18,7 +18,7 @@ export const Notification = sequelize.define('Notification', {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
     allowNull: false,
     references: {
-      model: 'Task',
+      model: 'Tasks',
       key: 'id'
     }
   },

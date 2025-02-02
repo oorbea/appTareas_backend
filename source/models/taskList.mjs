@@ -11,7 +11,7 @@ export const TaskList = sequelize.define('TaskList', {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
     allowNull: false,
     references: {
-      model: 'User',
+      model: 'Users',
       key: 'id'
     }
   },

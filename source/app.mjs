@@ -1376,6 +1376,16 @@ app.post('/prioritease_api/admin/login', async (req, res) => {
  *                 error:
  *                   type: string
  *                   example: No autorizado
+ *       409:
+ *         description: Ya existe una lista de tareas con ese nombre.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ya existe una lista de tareas con ese nombre
  *       500:
  *         description: Error inesperado en el servidor.
  *         content:
@@ -1394,8 +1404,14 @@ app.post('/prioritease_api/task_list', authenticate, async (req, res) => {
   if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
 
   try {
-    const taskList = await TaskList.create({ name, user });
-    return res.status(201).json({ message: 'Lista de tareas creada exitosamente', taskList });
+    let taskList = await TaskList.findOne({ where: { name, user } });
+    if (taskList) return res.status(409).json({ error: 'Ya existe una lista de tareas con ese nombre' });
+
+    taskList = await TaskList.create({ name, user });
+    return res.status(201).json({
+      message: 'Lista de tareas creada exitosamente',
+      taskList: { id: taskList.id, name: taskList.name, user: taskList.user }
+    });
   } catch (error) {
     console.error('Error al crear lista de tareas:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
@@ -1486,6 +1502,16 @@ app.post('/prioritease_api/task_list', authenticate, async (req, res) => {
  *                 error:
  *                   type: string
  *                   example: No autorizado
+ *       409:
+ *         description: Ya existe una lista de tareas con ese nombre.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ya existe una lista de tareas con ese nombre
  *       500:
  *         description: Error inesperado en el servidor.
  *         content:
@@ -1508,8 +1534,14 @@ app.post('/prioritease_api/task_list/:id', authenticate, async (req, res) => {
   if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
 
   try {
-    const taskList = await TaskList.create({ name, user });
-    return res.status(201).json({ message: 'Lista de tareas creada exitosamente', taskList });
+    let taskList = await TaskList.findOne({ where: { name, user } });
+    if (taskList) return res.status(409).json({ error: 'Ya existe una lista de tareas con ese nombre' });
+
+    taskList = await TaskList.create({ name, user });
+    return res.status(201).json({
+      message: 'Lista de tareas creada exitosamente',
+      taskList: { id: taskList.id, name: taskList.name, user: taskList.user }
+    });
   } catch (error) {
     console.error('Error al crear lista de tareas:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });

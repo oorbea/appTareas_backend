@@ -11,7 +11,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
     allowNull: false,
     references: {
-      model: 'User',
+      model: 'Users',
       key: 'id'
     }
   },
@@ -31,7 +31,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
     allowNull: true,
     references: {
-      model: 'Task',
+      model: 'Tasks',
       key: 'id'
     }
   },
@@ -69,7 +69,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
     allowNull: false,
     references: {
-      model: 'TaskList',
+      model: 'TaskLists',
       key: 'id'
     }
   },
