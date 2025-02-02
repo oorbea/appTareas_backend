@@ -2,6 +2,7 @@ import { DataTypes } from 'sequelize';
 import { sequelize } from '../db.mjs';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import { TaskList } from './taskList.mjs';
 
 dotenv.config();
 
@@ -59,6 +60,12 @@ export const User = sequelize.define('User', {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
       }
+    },
+    afterCreate: async (user) => {
+      await TaskList.create({
+        user: user.id,
+        name: 'prioritease:favourite-tasks'
+      });
     }
   }
 });
