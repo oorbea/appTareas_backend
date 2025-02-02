@@ -369,7 +369,8 @@ app.patch('/prioritease_api/user/disable', authenticate, async (req, res) => {
 app.patch('/prioritease_api/user/disable/:id', authenticate, async (req, res) => {
   if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
 
-  const { id } = req.params;
+  let { id } = req.params;
+  if (typeof id === 'string') id = parseInt(id);
   try {
     const user = await User.findByPk(id);
     if (!user) {
@@ -595,7 +596,9 @@ app.post('/prioritease_api/user/upload_picture', authenticate, uploadImage.singl
 app.post('/prioritease_api/user/upload_picture/:id', authenticate, uploadImage.single('profilePicture'), async (req, res) => {
   if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
 
-  const { id } = req.params;
+  let { id } = req.params;
+  if (typeof id === 'string') id = parseInt(id);
+
   const file = req.file;
 
   if (!file) {
@@ -831,7 +834,8 @@ app.put('/prioritease_api/user/:id', authenticate, async (req, res) => {
 
   if (!req.body) return res.status(400).json({ error: 'No se proporcionaron datos para actualizar' });
 
-  const { id } = req.params;
+  let { id } = req.params;
+  if (typeof id === 'string') id = parseInt(id);
   const { username, email, password, picture } = req.body;
 
   if (username) {
@@ -1133,7 +1137,8 @@ app.patch('/prioritease_api/user/reset_password', async (req, res) => {
 app.get('/prioritease_api/user/:id', authenticate, async (req, res) => {
   if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
 
-  const { id } = req.params;
+  let { id } = req.params;
+  if (typeof id === 'string') id = parseInt(id);
 
   try {
     const user = await User.findByPk(id);
@@ -1294,8 +1299,210 @@ app.post('/prioritease_api/admin/login', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /prioritease_api/task_list:
+ *   post:
+ *     summary: Crea una nueva lista de tareas para el usuario autenticado.
+ *     description: Permite a un usuario autenticado crear una nueva lista de tareas con un nombre específico.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Public
+ *     security:
+ *       - bearerAuth: [] # Requiere autenticación mediante JWT
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Nombre de la lista de tareas.
+ *                 example: "Tareas del Hogar"
+ *     responses:
+ *       201:
+ *         description: Lista de tareas creada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Lista de tareas creada exitosamente
+ *                 taskList:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Tareas del Hogar"
+ *                     user:
+ *                       type: integer
+ *                       example: 123
+ *       400:
+ *         description: Error de validación en los datos proporcionados.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "El nombre es requerido"
+ *       401:
+ *         description: Token no proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No autorizado
+ *       403:
+ *         description: Token inválido o caducado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No autorizado
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
 app.post('/prioritease_api/task_list', authenticate, async (req, res) => {
   const user = req.user.id;
+  const { name } = req.body;
+  const result = validateTaskList({ name });
+  if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
+
+  try {
+    const taskList = await TaskList.create({ name, user });
+    return res.status(201).json({ message: 'Lista de tareas creada exitosamente', taskList });
+  } catch (error) {
+    console.error('Error al crear lista de tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/task_list/{id}:
+ *   post:
+ *     summary: Crea una nueva lista de tareas para el usuario de id especificada.
+ *     description: Permite a un administrador autenticado crear una nueva lista de tareas con un nombre específico para un usuario cualquiera.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Admin
+ *     security:
+ *       - bearerAuth: [] # Requiere autenticación de admin mediante JWT
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del usuario al que le van a crear la lista.
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Nombre de la lista de tareas.
+ *                 example: "Tareas del Hogar"
+ *     responses:
+ *       201:
+ *         description: Lista de tareas creada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Lista de tareas creada exitosamente
+ *                 taskList:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Tareas del Hogar"
+ *                     user:
+ *                       type: integer
+ *                       example: 123
+ *       400:
+ *         description: Error de validación en los datos proporcionados.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "El nombre es requerido"
+ *       401:
+ *         description: Token no proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No autorizado
+ *       403:
+ *         description: Token inválido o caducado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No autorizado
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.post('/prioritease_api/task_list/:id', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  let user = req.params.id;
+  if (typeof user === 'string') user = parseInt(user);
+
   const { name } = req.body;
   const result = validateTaskList({ name });
   if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
