@@ -238,6 +238,25 @@ app.post('/prioritease_api/user/login', async (req, res) => {
  *                 message:
  *                   type: string
  *                   example: Usuario dado de baja correctamente
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     picture:
+ *                       type: string
+ *                     enabled:
+ *                       type: boolean
+ *                   example:
+ *                     id: 123
+ *                     username: Spiderman
+ *                     email: peter.parker@example.com
+ *                     picture: public/profile_pictures/spiderman.jpg
+ *                     enabled: false
  *       401:
  *         description: No autorizado. El token no fue proporcionado o es inválido.
  *         content:
@@ -288,7 +307,16 @@ app.patch('/prioritease_api/user/disable', authenticate, async (req, res) => {
     }
 
     await user.update({ enabled: false });
-    return res.status(200).json({ message: 'Usuario dado de baja correctamente' });
+    return res.status(200).json({
+      message: 'Usuario dado de baja correctamente',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        picture: user.picture,
+        enabled: user.enabled
+      }
+    });
   } catch (error) {
     console.error('Error al deshabilitar usuario:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
@@ -326,6 +354,25 @@ app.patch('/prioritease_api/user/disable', authenticate, async (req, res) => {
  *                 message:
  *                   type: string
  *                   example: Usuario dado de baja correctamente
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     picture:
+ *                       type: string
+ *                     enabled:
+ *                       type: boolean
+ *                   example:
+ *                     id: 123
+ *                     username: Spiderman
+ *                     email: peter.parker@example.com
+ *                     picture: public/profile_pictures/spiderman.jpg
+ *                     enabled: false
  *       401:
  *         description: No autorizado. El token no fue proporcionado o es inválido.
  *         content:
@@ -379,7 +426,16 @@ app.patch('/prioritease_api/user/disable/:id', authenticate, async (req, res) =>
     }
 
     await user.update({ enabled: false });
-    return res.status(200).json({ message: 'Usuario dado de baja correctamente' });
+    return res.status(200).json({
+      message: 'Usuario dado de baja correctamente',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        picture: user.picture,
+        enabled: user.enabled
+      }
+    });
   } catch (error) {
     console.error('Error al deshabilitar usuario:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
@@ -1956,6 +2012,195 @@ app.get('/prioritease_api/task_list', authenticate, async (req, res) => {
     return res.status(200).json(taskLists);
   } catch (error) {
     console.error('Error al obtener listas de tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/task_list/name/{name}:
+ *   get:
+ *     summary: Obtiene una lista de tareas por nombre.
+ *     description: Retorna una lista de tareas habilitada basada en el nombre proporcionado y el ID del usuario autenticado.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Public
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         description: Nombre de la lista de tareas a buscar.
+ *         schema:
+ *           type: string
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de tareas encontrada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: ID de la lista de tareas.
+ *                 name:
+ *                   type: string
+ *                   description: Nombre de la lista de tareas.
+ *                 user:
+ *                   type: integer
+ *                   description: ID del usuario propietario de la lista.
+ *       401:
+ *         description: Token no proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Token no proporcionado"
+ *       403:
+ *         description: Token no válido o caducado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Token no válido o caducado"
+ *       404:
+ *         description: Lista de tareas no encontrada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Lista de tareas no encontrada"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Ha ocurrido un error inesperado en el servidor"
+ */
+app.get('/prioritease_api/task_list/name/:name', authenticate, async (req, res) => {
+  let user = req.user.id;
+  if (typeof user === 'string') user = parseInt(user);
+
+  const { name } = req.params;
+
+  try {
+    const taskList = await TaskList.findOne({
+      attributes: ['id', 'name', 'user'],
+      where: { user, name, enabled: true }
+    });
+    if (!taskList) return res.status(404).json({ error: 'Lista de tareas no encontrada' });
+    return res.status(200).json(taskList);
+  } catch (error) {
+    console.error('Error al obtener listas de tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/task_list/disable/{id}:
+ *   patch:
+ *     summary: Deshabilita una lista de tareas específica.
+ *     description: Desactiva una lista de tareas en la base de datos. Solo el propietario de la lista o un administrador pueden realizar esta acción.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Public
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la lista de tareas a deshabilitar.
+ *     responses:
+ *       200:
+ *         description: Lista de tareas deshabilitada correctamente.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Lista de tareas deshabilitada correctamente"
+ *               taskList:
+ *                 id: 123
+ *                 name: "Tareas del Hogar"
+ *                 user: 12345
+ *                 enabled: false
+ *       400:
+ *         description: ID no válido (si no es un número entero).
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "ID no válido"
+ *       401:
+ *         description: No se proporcionó token de autenticación.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Token no proporcionado"
+ *       403:
+ *         description: Token inválido o expirado, o usuario sin permisos para deshabilitar la lista.
+ *         content:
+ *           application/json:
+ *             examples:
+ *               token_expired:
+ *                 value:
+ *                   error: "Token no válido o caducado"
+ *               unauthorized_user:
+ *                 value:
+ *                   error: "No tienes permisos para deshabilitar esta lista"
+ *       404:
+ *         description: La lista de tareas no existe o ya está deshabilitada.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Lista de tareas no encontrada"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Ha ocurrido un error inesperado en el servidor"
+ */
+app.patch('/prioritease_api/task_list/disable/:id', authenticate, async (req, res) => {
+  let id = req.params.id;
+  if (typeof id === 'string') id = parseInt(id);
+
+  try {
+    const taskList = await TaskList.findByPk(id);
+    if (!taskList || !taskList.enabled) {
+      return res.status(404).json({ error: 'Lista de tareas no encontrada' });
+    }
+
+    if (taskList.user !== req.user.id && !req.user.admin) return res.status(403).json({ error: 'No tienes permisos para deshabilitar esta lista' });
+
+    await taskList.update({ enabled: false });
+    return res.status(200).json({
+      message: 'Lista de tareas deshabilitada correctamente',
+      taskList: {
+        id: taskList.id,
+        name: taskList.name,
+        user: taskList.user,
+        enabled: taskList.enabled
+      }
+    });
+  } catch (error) {
+    console.error('Error al deshabilitar lista de tareas:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
   }
 });

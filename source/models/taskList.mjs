@@ -38,16 +38,16 @@ export async function createFavouriteList (user) {
     await TaskList.findOrCreate({
       where: {
         user: user.id,
-        name: 'prioritease:favourite-tasks',
+        name: 'prioritease-favourite-tasks',
         enabled: true
       },
       defaults: {
         user: user.id,
-        name: 'prioritease:favourite-tasks',
+        name: 'prioritease-favourite-tasks',
         enabled: true
       }
     });
-    console.log(`Lista de tareas "prioritease:favourite-tasks" creada para el usuario ${user.id}`);
+    console.log(`Lista de tareas "prioritease-favourite-tasks" creada para el usuario ${user.id}`);
   } catch (error) {
     console.error('Error al crear la lista de tareas por defecto:', error);
   }
