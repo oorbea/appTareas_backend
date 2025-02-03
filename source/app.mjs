@@ -7,7 +7,7 @@ import { Op } from 'sequelize';
 import { authenticate } from './authenticate.mjs';
 import { connectDB, createTables } from './db.mjs';
 import { User, createAdmin } from './models/user.mjs';
-import { TaskList } from './models/taskList.mjs';
+import { TaskList, createFavouriteList } from './models/taskList.mjs';
 import { setupSwagger } from './swagger.mjs';
 import { validateUser, validateUsername, validatePassword, validateEmail, validateTaskList } from './validations.mjs';
 import { sendPasswordResetEmail } from './utils/emailSender.mjs';
@@ -28,7 +28,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 try {
   await connectDB();
-  console.log('Connection to database has been established successfully.');
   await createTables();
   await createAdmin();
 } catch (error) {
@@ -121,6 +120,8 @@ app.post('/prioritease_api/user/register', async (req, res) => {
       enabled: true
     });
 
+    await createFavouriteList(newUser);
+
     return res.status(201).json({
       message: 'Usuario registrado exitosamente.',
       user: {
@@ -203,7 +204,7 @@ app.post('/prioritease_api/user/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username, email: user.email, admin: user.admin },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '720h' }
     );
 
     return res.status(200).json({ message: 'Se ha iniciado correctamente la sesión', token });
@@ -1160,7 +1161,7 @@ app.get('/prioritease_api/user/:id', authenticate, async (req, res) => {
 
 /**
  * @swagger
- * /prioritease_api/user:
+ * /prioritease_api/user/all:
  *   get:
  *     summary: Obtiene una lista de todos los usuarios habilitados.
  *     description: Retorna una lista de usuarios habilitados con sus detalles básicos (ID, nombre de usuario, correo electrónico y foto de perfil).
@@ -1206,7 +1207,7 @@ app.get('/prioritease_api/user/:id', authenticate, async (req, res) => {
  *                   type: string
  *                   example: "Ha ocurrido un error inesperado en el servidor"
  */
-app.get('/prioritease_api/user', authenticate, async (req, res) => {
+app.get('/prioritease_api/user/all', authenticate, async (req, res) => {
   if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
 
   try {
@@ -1217,6 +1218,84 @@ app.get('/prioritease_api/user', authenticate, async (req, res) => {
     return res.status(200).json(users);
   } catch (error) {
     console.error('Error al obtener usuarios:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/user:
+ *   get:
+ *     summary: Obtiene la información del usuario autenticado.
+ *     description: Retorna los detalles de un usuario basado en su token, siempre y cuando el usuario esté habilitado.
+ *     tags:
+ *       - Usuarios
+ *       - Public
+ *     security:
+ *       - bearerAuth: []  # Requiere autenticación mediante JWT
+ *     responses:
+ *       200:
+ *         description: Información del usuario obtenida correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: ID del usuario.
+ *                 username:
+ *                   type: string
+ *                   description: Nombre de usuario.
+ *                 email:
+ *                   type: string
+ *                   description: Correo electrónico del usuario.
+ *                 picture:
+ *                   type: string
+ *                   description: URL de la imagen de perfil del usuario.
+ *       401:
+ *         description: No autorizado. El token no fue proporcionado.
+ *       403:
+ *         description: No autorizado. El token es inválido o está caducado.
+ *       404:
+ *         description: Usuario no encontrado o no habilitado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Usuario no encontrado"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Ha ocurrido un error inesperado en el servidor"
+ */
+app.get('/prioritease_api/user', authenticate, async (req, res) => {
+  let { id } = req.user.id;
+  if (typeof id === 'string') id = parseInt(id);
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user || !user.enabled) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    return res.status(200).json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      picture: user.picture
+    });
+  } catch (error) {
+    console.error('Error al obtener usuario:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
   }
 });
@@ -1420,7 +1499,7 @@ app.post('/prioritease_api/task_list', authenticate, async (req, res) => {
 
 /**
  * @swagger
- * /prioritease_api/task_list/{id}:
+ * /prioritease_api/task_list/{user}:
  *   post:
  *     summary: Crea una nueva lista de tareas para el usuario de id especificada.
  *     description: Permite a un administrador autenticado crear una nueva lista de tareas con un nombre específico para un usuario cualquiera.
@@ -1523,10 +1602,10 @@ app.post('/prioritease_api/task_list', authenticate, async (req, res) => {
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-app.post('/prioritease_api/task_list/:id', authenticate, async (req, res) => {
+app.post('/prioritease_api/task_list/:user', authenticate, async (req, res) => {
   if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
 
-  let user = req.params.id;
+  let user = req.params.user;
   if (typeof user === 'string') user = parseInt(user);
 
   const { name } = req.body;
@@ -1544,6 +1623,339 @@ app.post('/prioritease_api/task_list/:id', authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error('Error al crear lista de tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/task_list/all:
+ *   get:
+ *     summary: Obtiene todas las listas de tareas habilitadas (solo para administradores).
+ *     description: Permite a un usuario administrador obtener todas las listas de tareas habilitadas en el sistema.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Listas de tareas habilitadas obtenidas exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "Tareas del Hogar"
+ *                   user:
+ *                     type: integer
+ *                     example: 123
+ *                   enabled:
+ *                     type: boolean
+ *                     example: true
+ *       401:
+ *         description: Token no proporcionado o no válido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no válido o caducado
+ *       403:
+ *         description: Usuario no tiene permisos de administrador.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No tienes permisos para acceder a esta ruta
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.get('/prioritease_api/task_list/all', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  try {
+    const taskLists = await TaskList.findAll({
+      attributes: ['id', 'name', 'user'],
+      where: { enabled: true }
+    });
+    return res.status(200).json(taskLists);
+  } catch (error) {
+    console.error('Error al obtener listas de tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/task_list/user/{user}:
+ *   get:
+ *     summary: Obtiene las listas de tareas habilitadas de un usuario específico (solo para administradores).
+ *     description: Permite a un usuario administrador obtener todas las listas de tareas habilitadas asociadas a un usuario específico.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario cuyas listas de tareas habilitadas se desean obtener.
+ *     responses:
+ *       200:
+ *         description: Listas de tareas habilitadas obtenidas exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "Tareas del Hogar"
+ *                   user:
+ *                     type: integer
+ *                     example: 123
+ *                   enabled:
+ *                     type: boolean
+ *                     example: true
+ *       401:
+ *         description: Token no proporcionado o no válido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no válido o caducado
+ *       403:
+ *         description: Usuario no tiene permisos de administrador.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No tienes permisos para acceder a esta ruta
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.get('/prioritease_api/task_list/user/:user', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  let user = req.params.user;
+  if (typeof user === 'string') user = parseInt(user);
+
+  try {
+    const taskLists = await TaskList.findAll({
+      attributes: ['id', 'name', 'user'],
+      where: { user, enabled: true }
+    });
+    return res.status(200).json(taskLists);
+  } catch (error) {
+    console.error('Error al obtener listas de tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/task_list/{id}:
+ *   get:
+ *     summary: Obtiene una lista de tareas habilitada por su ID (solo para administradores).
+ *     description: Permite a un usuario administrador obtener una lista de tareas habilitada específica por su ID.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la lista de tareas habilitada que se desea obtener.
+ *     responses:
+ *       200:
+ *         description: Lista de tareas habilitada obtenida exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "Tareas del Hogar"
+ *                   user:
+ *                     type: integer
+ *                     example: 123
+ *                   enabled:
+ *                     type: boolean
+ *                     example: true
+ *       401:
+ *         description: Token no proporcionado o no válido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no válido o caducado
+ *       403:
+ *         description: Usuario no tiene permisos de administrador.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No tienes permisos para acceder a esta ruta
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.get('/prioritease_api/task_list/:id', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  let id = req.params.id;
+  if (typeof id === 'string') id = parseInt(id);
+
+  try {
+    const taskList = await TaskList.findByPk(id);
+
+    if (!taskList || !taskList.enabled) {
+      return res.status(404).json({ error: 'Lista de tareas no encontrada' });
+    }
+
+    return res.status(200).json({
+      id: taskList.id,
+      name: taskList.name,
+      user: taskList.user
+    });
+  } catch (error) {
+    console.error('Error al obtener listas de tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/task_list:
+ *   get:
+ *     summary: Obtiene las listas de tareas habilitadas del usuario autenticado.
+ *     description: Permite a un usuario autenticado obtener todas sus listas de tareas habilitadas.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Public
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Listas de tareas habilitadas obtenidas exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "Tareas del Hogar"
+ *                   user:
+ *                     type: integer
+ *                     example: 123
+ *                   enabled:
+ *                     type: boolean
+ *                     example: true
+ *       401:
+ *         description: Token no proporcionado o no válido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no válido o caducado
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.get('/prioritease_api/task_list', authenticate, async (req, res) => {
+  let user = req.user.id;
+  if (typeof user === 'string') user = parseInt(user);
+
+  try {
+    const taskLists = await TaskList.findAll({
+      attributes: ['id', 'name', 'user'],
+      where: { user, enabled: true }
+    });
+    return res.status(200).json(taskLists);
+  } catch (error) {
+    console.error('Error al obtener listas de tareas:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
   }
 });

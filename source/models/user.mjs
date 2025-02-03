@@ -2,7 +2,7 @@ import { DataTypes } from 'sequelize';
 import { sequelize } from '../db.mjs';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import { TaskList } from './taskList.mjs';
+import { createFavouriteList } from './taskList.mjs';
 
 dotenv.config();
 
@@ -60,30 +60,24 @@ export const User = sequelize.define('User', {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
       }
-    },
-    afterCreate: async (user) => {
-      await TaskList.create({
-        user: user.id,
-        name: 'prioritease:favourite-tasks'
-      });
     }
   }
 });
 
-export function createAdmin () {
-  return User.findOrCreate({
-    where: { email: process.env.ADMIN_EMAIL },
-    defaults: {
-      password: process.env.ADMIN_PASSWORD,
-      admin: true,
-      username: process.env.ADMIN_USERNAME,
-      email: process.env.ADMIN_EMAIL
-    }
-  })
-    .then(() => {
-      console.log('Admin created successfully');
-    })
-    .catch((error) => {
-      console.error('Error creating admin:', error);
+export async function createAdmin () {
+  try {
+    const [admin, created] = await User.findOrCreate({
+      where: { email: process.env.ADMIN_EMAIL },
+      defaults: {
+        password: process.env.ADMIN_PASSWORD,
+        admin: true,
+        username: process.env.ADMIN_USERNAME,
+        email: process.env.ADMIN_EMAIL
+      }
     });
+    if (created) await createFavouriteList(admin);
+    console.log('Admin created successfully');
+  } catch (error) {
+    console.error('Error creating admin:', error);
+  }
 }
