@@ -9,7 +9,7 @@ import { connectDB, createTables } from './db.mjs';
 import { User, createAdmin } from './models/user.mjs';
 import { TaskList, createFavouriteList } from './models/taskList.mjs';
 import { setupSwagger } from './swagger.mjs';
-import { validateUser, validateUsername, validatePassword, validateEmail, validateTaskList } from './validations.mjs';
+import { validateUser, validateUsername, validatePassword, validateEmail, validateTaskList, validateTaskListName } from './validations.mjs';
 import { sendPasswordResetEmail } from './utils/emailSender.mjs';
 import { generateRandomNum } from './utils/randomNumberGenerator.mjs';
 import { uploadImage } from './utils/upload.mjs';
@@ -1130,7 +1130,7 @@ app.patch('/prioritease_api/user/reset_password', async (req, res) => {
 
 /**
  * @swagger
- * /prioritease_api/user/{id}:
+ * /prioritease_api/user/id/{id}:
  *   get:
  *     summary: Obtiene la información de un usuario específico.
  *     description: Retorna los detalles de un usuario basado en su ID, siempre y cuando el usuario esté habilitado.
@@ -1191,7 +1191,7 @@ app.patch('/prioritease_api/user/reset_password', async (req, res) => {
  *                   type: string
  *                   example: "Ha ocurrido un error inesperado en el servidor"
  */
-app.get('/prioritease_api/user/:id', authenticate, async (req, res) => {
+app.get('/prioritease_api/user/id/:id', authenticate, async (req, res) => {
   if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
 
   let { id } = req.params;
@@ -1535,7 +1535,7 @@ app.post('/prioritease_api/admin/login', async (req, res) => {
 app.post('/prioritease_api/task_list', authenticate, async (req, res) => {
   const user = req.user.id;
   const { name } = req.body;
-  const result = validateTaskList({ name });
+  const result = validateTaskListName({ name });
   if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
 
   try {
@@ -1665,7 +1665,7 @@ app.post('/prioritease_api/task_list/:user', authenticate, async (req, res) => {
   if (typeof user === 'string') user = parseInt(user);
 
   const { name } = req.body;
-  const result = validateTaskList({ name });
+  const result = validateTaskListName({ name });
   if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
 
   try {
@@ -1853,7 +1853,7 @@ app.get('/prioritease_api/task_list/user/:user', authenticate, async (req, res) 
 
 /**
  * @swagger
- * /prioritease_api/task_list/{id}:
+ * /prioritease_api/task_list/id/{id}:
  *   get:
  *     summary: Obtiene una lista de tareas habilitada por su ID (solo para administradores).
  *     description: Permite a un usuario administrador obtener una lista de tareas habilitada específica por su ID.
@@ -1922,7 +1922,7 @@ app.get('/prioritease_api/task_list/user/:user', authenticate, async (req, res) 
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-app.get('/prioritease_api/task_list/:id', authenticate, async (req, res) => {
+app.get('/prioritease_api/task_list/id/:id', authenticate, async (req, res) => {
   if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
 
   let id = req.params.id;
@@ -2201,6 +2201,238 @@ app.patch('/prioritease_api/task_list/disable/:id', authenticate, async (req, re
     });
   } catch (error) {
     console.error('Error al deshabilitar lista de tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/task_list/name/{id}:
+ *   patch:
+ *     summary: Actualiza el nombre de una lista de tareas.
+ *     description: Modifica el nombre de una lista de tareas específica. Solo el propietario o un administrador pueden realizar esta acción.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Public
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la lista de tareas a actualizar.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Mi nueva lista"
+ *           description: Nuevo nombre para la lista de tareas.
+ *     responses:
+ *       200:
+ *         description: Nombre actualizado correctamente.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Nombre de la lista de tareas actualizado correctamente"
+ *               taskList:
+ *                 id: 123
+ *                 name: "Mi nueva lista"
+ *                 user: 12345
+ *       400:
+ *         description: Nombre no válido.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "El nombre debe tener entre 1 y 30 caracteres"
+ *       401:
+ *         description: No se proporcionó token de autenticación.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Token no proporcionado"
+ *       403:
+ *         description: El usuario no tiene permisos para cambiar el nombre de esta lista.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "No tienes permisos para cambiar el nombre de esta lista"
+ *       404:
+ *         description: Lista de tareas no encontrada o deshabilitada.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Lista de tareas no encontrada"
+ *       409:
+ *         description: Ya existe una lista de tareas con ese nombre.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Ya existe una lista de tareas con ese nombre"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Ha ocurrido un error inesperado en el servidor"
+ */
+app.patch('/prioritease_api/task_list/name/:id', authenticate, async (req, res) => {
+  let id = req.params.id;
+  if (typeof id === 'string') id = parseInt(id);
+
+  const user = req.user.id;
+
+  const { name } = req.body;
+  const result = validateTaskListName({ name });
+  if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
+
+  try {
+    const taskList = await TaskList.findByPk(id);
+    if (!taskList || !taskList.enabled) {
+      return res.status(404).json({ error: 'Lista de tareas no encontrada' });
+    }
+
+    const existingTaskList = await TaskList.findOne({ where: { name, user: taskList.user, enabled: true } });
+    if (existingTaskList) return res.status(409).json({ error: 'Ya existe una lista de tareas con ese nombre' });
+
+    if (taskList.user !== user && !req.user.admin) return res.status(403).json({ error: 'No tienes permisos para cambiar el nombre de esta lista' });
+
+    await taskList.update({ name });
+    return res.status(200).json({
+      message: 'Nombre de la lista de tareas actualizado correctamente',
+      taskList: {
+        id: taskList.id,
+        name: taskList.name,
+        user: taskList.user
+      }
+    });
+  } catch (error) {
+    console.error('Error al cambiar el nombre a lista de tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/task_list/{id}:
+ *   put:
+ *     summary: Actualiza una lista de tareas (Solo admin).
+ *     description: Modifica los atributos de una lista de tareas, incluyendo su nombre, usuario y estado habilitado. Solo accesible para administradores.
+ *     tags:
+ *       - Lista de Tareas
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la lista de tareas a actualizar.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Nueva lista de tareas"
+ *               user:
+ *                 type: integer
+ *                 example: 2
+ *               enabled:
+ *                 type: boolean
+ *                 example: true
+ *           description: Datos a actualizar en la lista de tareas.
+ *     responses:
+ *       200:
+ *         description: Lista de tareas actualizada correctamente.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Lista de tareas actualizada correctamente"
+ *       400:
+ *         description: Datos de entrada no válidos.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "El nombre debe tener entre 1 y 30 caracteres"
+ *       401:
+ *         description: No se proporcionó token de autenticación.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Token no proporcionado"
+ *       403:
+ *         description: Usuario sin permisos para modificar la lista (No es admin).
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "No tienes permisos para acceder a esta ruta"
+ *       404:
+ *         description: Lista de tareas no encontrada o deshabilitada.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Lista de tareas no encontrada"
+ *       409:
+ *         description: Ya existe una lista de tareas con el mismo nombre para el usuario.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Ya existe una lista de tareas con ese nombre"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Ha ocurrido un error inesperado en el servidor"
+ */
+app.put('/prioritease_api/task_list/:id', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  let id = req.params.id;
+  if (typeof id === 'string') id = parseInt(id);
+
+  const result = validateTaskList(req.body);
+  if (result.error) return res.status(400).json({ error: result.error.issues[0].message });
+
+  const { name, user, enabled } = req.body;
+  try {
+    const taskList = await TaskList.findByPk(id);
+    if (!taskList || !taskList.enabled) return res.status(404).json({ error: 'Lista de tareas no encontrada' });
+
+    const existingUser = await User.findByPk(user);
+    if (!existingUser) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const existingTaskList = await TaskList.findOne({ where: { name, user, enabled: true } });
+    if (existingTaskList && existingTaskList.id !== id) return res.status(409).json({ error: 'Ya existe una lista de tareas con ese nombre' });
+
+    await taskList.update({
+      name: name ?? taskList.name,
+      user: user ?? taskList.user,
+      enabled: enabled ?? taskList.enabled
+    });
+
+    return res.status(200).json({
+      message: 'Lista de tareas actualizada correctamente',
+      taskList: {
+        name: taskList.name,
+        user: taskList.user,
+        enabled: taskList.enabled
+      }
+    });
+  } catch (error) {
+    console.error('Error al actualizar lista de tareas:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
   }
 });
