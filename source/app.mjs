@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import path from 'path';
 import { Op } from 'sequelize';
 import { authenticate } from './authenticate.mjs';
 import { connectDB, createTables } from './db.mjs';
@@ -677,6 +678,180 @@ app.post('/prioritease_api/user/upload_picture/:id', authenticate, uploadImage.s
     });
   } catch (error) {
     console.error('Error al subir imagen de perfil:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/user/picture:
+ *   get:
+ *     summary: Obtiene la imagen de perfil del usuario autenticado.
+ *     description: Permite a un usuario autenticado obtener su imagen de perfil.
+ *     tags:
+ *       - Usuarios
+ *       - Public
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Imagen de perfil obtenida exitosamente.
+ *         content:
+ *           image/*:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: No autorizado. El token no fue proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no proporcionado
+ *       403:
+ *         description: No autorizado. El token no es válido o está caducado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no válido o caducado
+ *       404:
+ *         description: Usuario no encontrado o no tiene imagen de perfil.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Usuario no encontrado o no tiene imagen de perfil
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.get('/prioritease_api/user/picture', authenticate, async (req, res) => {
+  const { id } = req.user;
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user || !user.enabled) {
+      return res.status(404).json({ error: 'Usuario no encontrado o deshabilitado' });
+    }
+
+    if (!user.picture) {
+      return res.status(404).json({ error: 'El usuario no tiene una imagen de perfil' });
+    }
+
+    const imagePath = path.join(process.cwd(), user.picture);
+
+    return res.status(200).sendFile(imagePath);
+  } catch (error) {
+    console.error('Error al obtener la imagen de perfil:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /prioritease_api/user/picture/{id}:
+ *   get:
+ *     summary: Obtiene la imagen de perfil del usuario de id pasada por query params.
+ *     description: Permite a un administrador obtener la imagen de perfil de un usuario.
+ *     tags:
+ *       - Usuarios
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del usuario del que se obtendrá la imagen de perfil.
+ *         schema:
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: Imagen de perfil obtenida exitosamente.
+ *         content:
+ *           image/*:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: No autorizado. El token no fue proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no proporcionado
+ *       403:
+ *         description: No autorizado. El token no es válido o está caducado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Token no válido o caducado
+ *       404:
+ *         description: Usuario no encontrado o no tiene imagen de perfil.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Usuario no encontrado o no tiene imagen de perfil
+ *       500:
+ *         description: Error inesperado en el servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ha ocurrido un error inesperado en el servidor
+ */
+app.get('/prioritease_api/user/picture/:id', authenticate, async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  let { id } = req.params;
+  if (typeof id === 'string') id = parseInt(id);
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user || !user.enabled) {
+      return res.status(404).json({ error: 'Usuario no encontrado o deshabilitado' });
+    }
+
+    if (!user.picture) {
+      return res.status(404).json({ error: 'El usuario no tiene una imagen de perfil' });
+    }
+
+    const imagePath = path.join(process.cwd(), user.picture);
+
+    return res.status(200).sendFile(imagePath);
+  } catch (error) {
+    console.error('Error al obtener la imagen de perfil:', error);
     return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
   }
 });
