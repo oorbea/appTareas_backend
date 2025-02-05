@@ -40,7 +40,14 @@ const options = {
             password: 'IamBatman123!'
           }
         },
-        TaskList: taskListSchemaSwagger
+        TaskList: {
+          ...taskListSchemaSwagger,
+          example: {
+            name: 'Tareas del hogar',
+            user: 1234567890,
+            enabled: true
+          }
+        }
       }
     }
   },
