@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import { userSchemaSwagger } from './schemas/userSchema.mjs';
+import { taskListSchemaSwagger } from './schemas/taskListSchema.mjs';
 
 dotenv.config();
 
@@ -28,6 +30,17 @@ const options = {
           scheme: 'bearer',
           bearerFormat: 'JWT'
         }
+      },
+      schemas: {
+        User: {
+          ...userSchemaSwagger,
+          example: {
+            username: 'Batman',
+            email: 'bruce.wayne@example.com',
+            password: 'IamBatman123!'
+          }
+        },
+        TaskList: taskListSchemaSwagger
       }
     }
   },

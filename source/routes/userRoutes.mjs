@@ -35,25 +35,7 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *                 description: Nombre de usuario
- *               email:
- *                 type: string
- *                 description: Correo electrónico del usuario
- *               password:
- *                 type: string
- *                 description: Contraseña del usuario
- *               picture:
- *                 type: string
- *                 description: URL de la imagen de perfil del usuario
- *             example:
- *               username: batman
- *               email: bruce.wayne@example.com
- *               password: Password123
- *               picture: public/profile_pictures/example.jpg
+ *             $ref: "#/components/schemas/User"
  *     responses:
  *       201:
  *         description: Usuario registrado exitosamente

@@ -1,4 +1,5 @@
 import z from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const userSchema = z.object({
   username: z.string({ message: 'El username debe ser un string' })
@@ -21,3 +22,5 @@ export const usernameSchema = z.object({}).merge(userSchema.pick({ username: tru
 export const passwordSchema = z.object({}).merge(userSchema.pick({ password: true }));
 
 export const emailSchema = z.object({}).merge(userSchema.pick({ email: true }));
+
+export const userSchemaSwagger = zodToJsonSchema(userSchema);

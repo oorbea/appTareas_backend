@@ -1,4 +1,5 @@
 import z from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const taskListSchema = z.object({
   name: z.string({ message: 'El nombre debe ser un string' })
@@ -15,3 +16,5 @@ export const taskListNameSchema = z.object({
     .max(30, { message: 'El nombre no puede exceder los 30 carácteres de longitud' })
     .nonempty({ message: 'El nombre es obligatorio' })
 });
+
+export const taskListSchemaSwagger = zodToJsonSchema(taskListSchema);
