@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import path from 'path';
 import { Op } from 'sequelize';
 import { User } from '../models/user.mjs';
-import { createFavouriteList } from '../models/taskList.mjs';
 import { validateUser, validateUsername, validatePassword, validateEmail } from '../validations.mjs';
 import { sendPasswordResetEmail } from '../utils/emailSender.mjs';
 import { generateRandomNum } from '../utils/randomNumberGenerator.mjs';
@@ -35,8 +34,6 @@ const registerUser = async (req, res) => {
       admin: false,
       enabled: true
     });
-
-    await createFavouriteList(newUser);
 
     return res.status(201).json({
       message: 'Usuario registrado exitosamente.',

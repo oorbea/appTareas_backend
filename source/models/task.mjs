@@ -37,11 +37,12 @@ export const Task = sequelize.define('Task', {
   },
   difficulty: {
     type: DataTypes.INTEGER.UNSIGNED,
-    allowNull: true,
+    allowNull: false,
     validate: {
       min: 1,
       max: 5
-    }
+    },
+    defaultValue: 1
   },
   lat: {
     type: DataTypes.DECIMAL(10, 8),
@@ -67,7 +68,7 @@ export const Task = sequelize.define('Task', {
   },
   list: {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: 'TaskLists',
       key: 'id'

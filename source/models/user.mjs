@@ -2,7 +2,6 @@ import { DataTypes } from 'sequelize';
 import { sequelize } from '../db.mjs';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import { createFavouriteList } from './taskList.mjs';
 
 dotenv.config();
 
@@ -66,7 +65,7 @@ export const User = sequelize.define('User', {
 
 export async function createAdmin () {
   try {
-    const [admin, created] = await User.findOrCreate({
+    await User.findOrCreate({
       where: { email: process.env.ADMIN_EMAIL },
       defaults: {
         password: process.env.ADMIN_PASSWORD,
@@ -75,7 +74,6 @@ export async function createAdmin () {
         email: process.env.ADMIN_EMAIL
       }
     });
-    if (created) await createFavouriteList(admin);
     console.log('Admin created successfully');
   } catch (error) {
     console.error('Error creating admin:', error);
