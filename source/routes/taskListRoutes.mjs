@@ -22,7 +22,7 @@ const router = express.Router();
  *     summary: Crea una nueva lista de tareas para el usuario autenticado.
  *     description: Permite a un usuario autenticado crear una nueva lista de tareas con un nombre específico.
  *     tags:
- *       - Lista de Tareas
+ *       - Listas de Tareas
  *       - Public
  *     security:
  *       - bearerAuth: [] # Requiere autenticación mediante JWT
@@ -122,7 +122,7 @@ router.post('/', authenticate, createTaskList);
    *     summary: Crea una nueva lista de tareas para el usuario de id especificada.
    *     description: Permite a un administrador autenticado crear una nueva lista de tareas con un nombre específico para un usuario cualquiera.
    *     tags:
-   *       - Lista de Tareas
+   *       - Listas de Tareas
    *       - Admin
    *     security:
    *       - bearerAuth: [] # Requiere autenticación de admin mediante JWT
@@ -229,7 +229,7 @@ router.post('/:user', authenticate, createTaskListAdmin);
    *     summary: Obtiene todas las listas de tareas habilitadas (solo para administradores).
    *     description: Permite a un usuario administrador obtener todas las listas de tareas habilitadas en el sistema.
    *     tags:
-   *       - Lista de Tareas
+   *       - Listas de Tareas
    *       - Admin
    *     security:
    *       - bearerAuth: []
@@ -295,7 +295,7 @@ router.get('/all', authenticate, getAllTaskLists);
    *     summary: Obtiene las listas de tareas habilitadas de un usuario específico (solo para administradores).
    *     description: Permite a un usuario administrador obtener todas las listas de tareas habilitadas asociadas a un usuario específico.
    *     tags:
-   *       - Lista de Tareas
+   *       - Listas de Tareas
    *       - Admin
    *     security:
    *       - bearerAuth: []
@@ -368,7 +368,7 @@ router.get('/user/:user', authenticate, getTaskListsByUser);
    *     summary: Obtiene una lista de tareas habilitada por su ID (solo para administradores).
    *     description: Permite a un usuario administrador obtener una lista de tareas habilitada específica por su ID.
    *     tags:
-   *       - Lista de Tareas
+   *       - Listas de Tareas
    *       - Admin
    *     security:
    *       - bearerAuth: []
@@ -441,7 +441,7 @@ router.get('/id/:id', authenticate, getTaskListById);
    *     summary: Obtiene las listas de tareas habilitadas del usuario autenticado.
    *     description: Permite a un usuario autenticado obtener todas sus listas de tareas habilitadas.
    *     tags:
-   *       - Lista de Tareas
+   *       - Listas de Tareas
    *       - Public
    *     security:
    *       - bearerAuth: []
@@ -497,7 +497,7 @@ router.get('/', authenticate, getMyTaskLists);
    *     summary: Obtiene una lista de tareas por nombre.
    *     description: Retorna una lista de tareas habilitada basada en el nombre proporcionado y el ID del usuario autenticado.
    *     tags:
-   *       - Lista de Tareas
+   *       - Listas de Tareas
    *       - Public
    *     parameters:
    *       - in: path
@@ -575,7 +575,7 @@ router.get('/name/:name', authenticate, getTaskListByName);
  *     summary: Deshabilita una lista de tareas específica.
  *     description: Desactiva una lista de tareas en la base de datos. Solo el propietario de la lista o un administrador pueden realizar esta acción.
  *     tags:
- *       - Lista de Tareas
+ *       - Listas de Tareas
  *       - Public
  *     security:
  *       - bearerAuth: []
@@ -643,7 +643,7 @@ router.patch('/disable/:id', authenticate, disableTaskList);
    *     summary: Actualiza el nombre de una lista de tareas.
    *     description: Modifica el nombre de una lista de tareas específica. Solo el propietario o un administrador pueden realizar esta acción.
    *     tags:
-   *       - Lista de Tareas
+   *       - Listas de Tareas
    *       - Public
    *     security:
    *       - bearerAuth: []
@@ -722,7 +722,7 @@ router.patch('/name/:id', authenticate, updateTaskListName);
    *     summary: Actualiza una lista de tareas (Solo admin).
    *     description: Modifica los atributos de una lista de tareas, incluyendo su nombre, usuario y estado habilitado. Solo accesible para administradores.
    *     tags:
-   *       - Lista de Tareas
+   *       - Listas de Tareas
    *       - Admin
    *     security:
    *       - bearerAuth: []

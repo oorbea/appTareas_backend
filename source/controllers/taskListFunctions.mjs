@@ -10,9 +10,12 @@ const createTaskList = async (req, res) => {
 
   try {
     let taskList = await TaskList.findOne({ where: { name, user } });
-    if (taskList) return res.status(409).json({ error: 'Ya existe una lista de tareas con ese nombre' });
+    if (taskList) {
+      if (taskList.enabled) return res.status(409).json({ error: 'Ya existe una lista de tareas con ese nombre' });
 
-    taskList = await TaskList.create({ name, user });
+      await taskList.update({ enabled: true });
+    } else taskList = await TaskList.create({ name, user });
+
     return res.status(201).json({
       message: 'Lista de tareas creada exitosamente',
       taskList: { id: taskList.id, name: taskList.name, user: taskList.user }
@@ -35,9 +38,12 @@ const createTaskListAdmin = async (req, res) => {
 
   try {
     let taskList = await TaskList.findOne({ where: { name, user } });
-    if (taskList) return res.status(409).json({ error: 'Ya existe una lista de tareas con ese nombre' });
+    if (taskList) {
+      if (taskList.enabled) return res.status(409).json({ error: 'Ya existe una lista de tareas con ese nombre' });
 
-    taskList = await TaskList.create({ name, user });
+      await taskList.update({ enabled: true });
+    } else taskList = await TaskList.create({ name, user });
+
     return res.status(201).json({
       message: 'Lista de tareas creada exitosamente',
       taskList: { id: taskList.id, name: taskList.name, user: taskList.user }

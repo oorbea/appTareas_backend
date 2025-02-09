@@ -1,5 +1,6 @@
 import { userSchema, usernameSchema, passwordSchema, emailSchema } from './schemas/userSchema.mjs';
 import { taskListSchema, taskListNameSchema } from './schemas/taskListSchema.mjs';
+import { taskSchema, taskUserSchema } from './schemas/taskSchema.mjs';
 
 function validateUser (user) {
   return userSchema.safeParse(user);
@@ -25,4 +26,12 @@ function validateTaskListName (taskList) {
   return taskListNameSchema.safeParse(taskList);
 }
 
-export { validateUser, validateUsername, validatePassword, validateEmail, validateTaskList, validateTaskListName };
+function validateTask (task) {
+  return taskSchema.safeParse(task);
+}
+
+function validateTaskUser (user) {
+  return taskUserSchema.safeParse(user);
+}
+
+export { validateUser, validateUsername, validatePassword, validateEmail, validateTaskList, validateTaskListName, validateTask, validateTaskUser };

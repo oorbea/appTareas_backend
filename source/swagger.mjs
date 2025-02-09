@@ -3,6 +3,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { userSchemaSwagger } from './schemas/userSchema.mjs';
 import { taskListSchemaSwagger } from './schemas/taskListSchema.mjs';
+import { taskSchemaSwagger } from './schemas/taskSchema.mjs';
 
 dotenv.config();
 
@@ -46,6 +47,21 @@ const options = {
             name: 'Tareas del hogar',
             user: 1234567890,
             enabled: true
+          }
+        },
+        Task: {
+          ...taskSchemaSwagger,
+          example: {
+            title: 'Comprar leche',
+            details: 'La leche debería ser desnatada',
+            deadline: '2021-12-31',
+            parent: 1234567890,
+            difficulty: 2,
+            lat: 40.416775,
+            lng: -3.703790,
+            list: 1234567890,
+            favourite: false,
+            done: false
           }
         }
       }
