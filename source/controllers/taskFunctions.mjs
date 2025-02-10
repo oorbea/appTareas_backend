@@ -123,4 +123,34 @@ const createTaskAdmin = async (req, res) => {
   }
 };
 
-export { createTask, createTaskAdmin };
+const getMyTasks = async (req, res) => {
+  const user = req.user.id;
+
+  try {
+    const tasks = await Task.findAll({
+      attributes: ['id', 'user', 'title', 'details', 'deadline', 'parent', 'difficulty', 'lat', 'lng', 'list', 'favourite', 'done'],
+      where: { user, enabled: true }
+    });
+    return res.status(200).json(tasks);
+  } catch (error) {
+    console.error('Error al obtener tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+};
+
+const getAllTasks = async (req, res) => {
+  if (!req.user.admin) return res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
+
+  try {
+    const tasks = await Task.findAll({
+      attributes: ['id', 'user', 'title', 'details', 'deadline', 'parent', 'difficulty', 'lat', 'lng', 'list', 'favourite', 'done'],
+      where: { enabled: true }
+    });
+    return res.status(200).json(tasks);
+  } catch (error) {
+    console.error('Error al obtener tareas:', error);
+    return res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+  }
+};
+
+export { createTask, createTaskAdmin, getMyTasks, getAllTasks };

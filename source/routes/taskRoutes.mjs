@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../authenticate.mjs';
-import { createTask, createTaskAdmin } from '../controllers/taskFunctions.mjs';
+import * as taskFunctions from '../controllers/taskFunctions.mjs';
 
 const router = express.Router();
 
@@ -69,7 +69,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-router.post('/', authenticate, createTask);
+router.post('/', authenticate, taskFunctions.createTask);
 
 /**
  * @swagger
@@ -160,6 +160,106 @@ router.post('/', authenticate, createTask);
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-router.post('/:user', authenticate, createTaskAdmin);
+router.post('/:user', authenticate, taskFunctions.createTaskAdmin);
+
+/**
+   * @swagger
+   * /prioritease_api/task:
+   *   get:
+   *     summary: Obtiene las tareas habilitadas del usuario autenticado.
+   *     description: Permite a un usuario autenticado obtener todas sus tareas habilitadas.
+   *     tags:
+   *       - Tareas
+   *       - Public
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Tareas habilitadas obtenidas exitosamente.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 schema:
+   *                   $ref: "#/components/schemas/Task"
+   *       401:
+   *         description: Token no proporcionado o no válido.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: string
+   *                   example: Token no válido o caducado
+   *       500:
+   *         description: Error inesperado en el servidor.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: string
+   *                   example: Ha ocurrido un error inesperado en el servidor
+   */
+router.get('/', authenticate, taskFunctions.getMyTasks);
+
+/**
+   * @swagger
+   * /prioritease_api/task/all:
+   *   get:
+   *     summary: Obtiene todas las tareas habilitadas.
+   *     description: Permite a un administrador autenticado obtener todas las tareas habilitadas.
+   *     tags:
+   *       - Tareas
+   *       - Admin
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Tareas habilitadas obtenidas exitosamente.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 schema:
+   *                   $ref: "#/components/schemas/Task"
+   *       401:
+   *         description: Token no proporcionado o no válido.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: string
+   *                   example: Token no válido o caducado
+   *       403:
+   *         description: No tienes permisos para acceder a esta ruta.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: string
+   *                   example: Token no válido o caducado
+   *       500:
+   *         description: Error inesperado en el servidor.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: string
+   *                   example: Ha ocurrido un error inesperado en el servidor
+   */
+router.get('/all', authenticate, taskFunctions.getAllTasks);
 
 export default router;
