@@ -24,13 +24,13 @@ class Task extends Model<TaskAttributes, Optional<TaskAttributes, 'id' | 'detail
   public details!: string | null;
   public deadline!: Date | null;
   public parent!: number | null;
-  public difficulty: number = 1;
+  public difficulty!: number;
   public lat!: number | null;
   public lng!: number | null;
   public list!: number | null;
-  public favourite: boolean = false;
-  public done: boolean = false;
-  public enabled: boolean = true;
+  public favourite!: boolean;
+  public done!: boolean;
+  public enabled!: boolean;
 }
 
 Task.init({

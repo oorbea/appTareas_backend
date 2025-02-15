@@ -301,6 +301,11 @@ class UserController {
           res.status(400).json({ error: emailValidation.error.issues[0].message });
           return;
         }
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser && existingUser.enabled && existingUser.id !== id) {
+          res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
+          return;
+        }
       }
       const user = await User.findByPk(id);
       if (!user || !user.enabled) {
@@ -313,12 +318,6 @@ class UserController {
         email: email ?? user.email,
         picture: picture ?? user.picture
       };
-
-      const existingUser = await User.findOne({ where: { email } });
-      if (existingUser && existingUser.enabled && existingUser.id !== id) {
-        res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
-        return;
-      }
 
       await user.update(updatedData);
       if (password) await user.update({ password });
@@ -374,6 +373,11 @@ class UserController {
           res.status(400).json({ error: emailValidation.error.issues[0].message });
           return;
         }
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser && existingUser.enabled && existingUser.id !== id) {
+          res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
+          return;
+        }
       }
       if (!user || !user.enabled) {
         res.status(404).json({ error: 'Usuario no encontrado' });
@@ -385,12 +389,6 @@ class UserController {
         email: email ?? user.email,
         picture: picture ?? user.picture
       };
-
-      const existingUser = await User.findOne({ where: { email } });
-      if (existingUser && existingUser.enabled && existingUser.id !== id) {
-        res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
-        return;
-      }
 
       await user.update(updatedData);
       if (password) await user.update({ password });

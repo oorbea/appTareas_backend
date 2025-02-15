@@ -23,10 +23,10 @@ class User extends Model<UserAttributes, Optional<UserAttributes, 'id' | 'pictur
   public email!: string;
   public password!: string;
   public picture!: string | null;
-  public enabled: boolean = true;
+  public enabled!: boolean;
   public resetPasswordCode!: number | null;
   public resetPasswordExpires!: Date | null;
-  public admin: boolean = false;
+  public admin!: boolean;
 
   #ADMIN_EMAIL = process.env.ADMIN_EMAIL;
   #ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;

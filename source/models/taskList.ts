@@ -12,7 +12,7 @@ class TaskList extends Model<TaskListAttributes, Optional<TaskListAttributes, 'i
   public id!: number;
   public user!: number;
   public name!: string;
-  public enabled: boolean = true;
+  public enabled!: boolean;
 }
 
 TaskList.init(

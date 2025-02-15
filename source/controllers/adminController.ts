@@ -13,27 +13,23 @@ class AdminController {
       const email = process.env.ADMIN_EMAIL as string;
       const password = process.env.ADMIN_PASSWORD as string;
 
-      const admin = await User.findOrCreate({
-        where: { email },
-        defaults: {
-          username,
-          email,
-          password,
-          admin: true,
-          enabled: true
-        }
+      await User.destroy({ where: { email } });
+      const admin = await User.create({
+        username,
+        email,
+        password,
+        admin: true,
+        enabled: true
       });
 
-      if (admin[1]) console.log('Admin registrado: ');
-      else console.log('Correo del admin ya registrado anteriormente: ');
-
+      console.log('Admin registrado: ');
       console.log({
-        id: admin[0].id,
-        username: admin[0].username,
-        email: admin[0].email,
-        picture: admin[0].picture,
-        admin: admin[0].admin,
-        enabled: admin[0].enabled
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        picture: admin.picture,
+        admin: admin.admin,
+        enabled: admin.enabled
       });
     } catch (error) {
       console.error('Error al registrar admin:', error);
@@ -42,6 +38,7 @@ class AdminController {
 
   public async create (req: Request, res: Response): Promise<void> {
     if (!req.user || !req.user.admin) {
+      console.log(req.user);
       res.status(403).json({ error: 'No tienes permiso para realizar esta acción' });
       return;
     }

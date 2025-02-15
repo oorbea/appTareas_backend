@@ -14,12 +14,6 @@ export interface UserPayload {
   [key: string]: unknown;
 }
 
-declare module 'express' {
-  interface Request {
-    user?: UserPayload;
-  }
-}
-
 const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 

@@ -6,8 +6,9 @@
     "strict": true, // Habilitar todas las opciones de tipo estricto
     "esModuleInterop": true, // Permitir la interoperabilidad entre CommonJS y ES Modules
     "skipLibCheck": true, // Omitir la verificación de tipos en archivos de declaración
-    "forceConsistentCasingInFileNames": true // Forzar consistencia en mayúsculas/minúsculas en nombres de archivos
+    "forceConsistentCasingInFileNames": true, // Forzar consistencia en mayúsculas/minúsculas en nombres de archivos
+    "typeRoots": ["./node_modules/@types", "./types"], // Carpeta de definiciones de tipos
   },
-  "include": ["source/**/*"], // Incluir todos los archivos en la carpeta source
+  "include": ["source/**/*", "types"], // Incluir todos los archivos en la carpeta source
   "exclude": ["node_modules"] // Excluir la carpeta node_modules
 }
