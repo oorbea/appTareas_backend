@@ -1,7 +1,39 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '../db.mjs';
+import { Model, DataTypes, Optional } from 'sequelize';
+import db from '../db';
 
-export const Task = sequelize.define('Task', {
+interface TaskAttributes {
+  id: number;
+  user: number;
+  title: string;
+  details?: string | null;
+  deadline?: Date | null;
+  parent?: number | null;
+  difficulty: number;
+  lat?: number | null;
+  lng?: number | null;
+  list?: number | null;
+  favourite: boolean;
+  done: boolean;
+  enabled: boolean;
+}
+
+class Task extends Model<TaskAttributes, Optional<TaskAttributes, 'id' | 'details' | 'deadline' | 'parent' | 'difficulty' | 'lat' | 'lng' | 'list' | 'favourite' | 'done' | 'enabled'>> implements TaskAttributes {
+  public id!: number;
+  public user!: number;
+  public title!: string;
+  public details!: string | null;
+  public deadline!: Date | null;
+  public parent!: number | null;
+  public difficulty: number = 1;
+  public lat!: number | null;
+  public lng!: number | null;
+  public list!: number | null;
+  public favourite: boolean = false;
+  public done: boolean = false;
+  public enabled: boolean = true;
+}
+
+Task.init({
   id: {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
     primaryKey: true,
@@ -11,7 +43,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id'
     }
   },
@@ -31,7 +63,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
     allowNull: true,
     references: {
-      model: 'Tasks',
+      model: 'tasks',
       key: 'id'
     }
   },
@@ -48,7 +80,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.DECIMAL(10, 8),
     allowNull: true,
     validate: {
-      notNullIfLng (value) {
+      notNullIfLng (value: number | null): void {
         if (value !== null && this.lng === null) {
           throw new Error('La longitud no puede ser nula si la latitud no es nula');
         }
@@ -59,7 +91,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.DECIMAL(11, 8),
     allowNull: true,
     validate: {
-      notNullIfLat (value) {
+      notNullIfLat (value: number | null): void {
         if (value !== null && this.lat === null) {
           throw new Error('La latitud no puede ser nula si la longitud no es nula');
         }
@@ -70,7 +102,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
     allowNull: true,
     references: {
-      model: 'TaskLists',
+      model: 'taskLists',
       key: 'id'
     }
   },
@@ -89,4 +121,9 @@ export const Task = sequelize.define('Task', {
     allowNull: false,
     defaultValue: true
   }
+}, {
+  sequelize: db.getSequelize(),
+  modelName: 'task'
 });
+
+export default Task;

@@ -1,17 +1,6 @@
 import express from 'express';
-import { authenticate } from '../authenticate.mjs';
-import {
-  createTaskList,
-  createTaskListAdmin,
-  getAllTaskLists,
-  getTaskListsByUser,
-  getTaskListById,
-  getMyTaskLists,
-  getTaskListByName,
-  disableTaskList,
-  updateTaskListName,
-  updateTaskList
-} from '../controllers/taskListFunctions.mjs';
+import authenticate from '../authenticate';
+import TLController from '../controllers/taskListController';
 
 const router = express.Router();
 
@@ -113,7 +102,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-router.post('/', authenticate, createTaskList);
+router.post('/', authenticate, TLController.createPublic);
 
 /**
    * @swagger
@@ -220,7 +209,7 @@ router.post('/', authenticate, createTaskList);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.post('/:user', authenticate, createTaskListAdmin);
+router.post('/:user', authenticate, TLController.createAdmin);
 
 /**
    * @swagger
@@ -286,7 +275,7 @@ router.post('/:user', authenticate, createTaskListAdmin);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.get('/all', authenticate, getAllTaskLists);
+router.get('/all', authenticate, TLController.getAll);
 
 /**
    * @swagger
@@ -359,7 +348,7 @@ router.get('/all', authenticate, getAllTaskLists);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.get('/user/:user', authenticate, getTaskListsByUser);
+router.get('/user/:user', authenticate, TLController.getByUser);
 
 /**
    * @swagger
@@ -432,7 +421,7 @@ router.get('/user/:user', authenticate, getTaskListsByUser);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.get('/id/:id', authenticate, getTaskListById);
+router.get('/id/:id', authenticate, TLController.getById);
 
 /**
    * @swagger
@@ -488,7 +477,7 @@ router.get('/id/:id', authenticate, getTaskListById);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.get('/', authenticate, getMyTaskLists);
+router.get('/', authenticate, TLController.getMine);
 
 /**
    * @swagger
@@ -566,7 +555,7 @@ router.get('/', authenticate, getMyTaskLists);
    *                   type: string
    *                   example: "Ha ocurrido un error inesperado en el servidor"
    */
-router.get('/name/:name', authenticate, getTaskListByName);
+router.get('/name/:name', authenticate, TLController.getByName);
 
 /**
  * @swagger
@@ -634,7 +623,7 @@ router.get('/name/:name', authenticate, getTaskListByName);
  *             example:
  *               error: "Ha ocurrido un error inesperado en el servidor"
  */
-router.patch('/disable/:id', authenticate, disableTaskList);
+router.patch('/disable/:id', authenticate, TLController.disable);
 
 /**
    * @swagger
@@ -713,7 +702,7 @@ router.patch('/disable/:id', authenticate, disableTaskList);
    *             example:
    *               error: "Ha ocurrido un error inesperado en el servidor"
    */
-router.patch('/name/:id', authenticate, updateTaskListName);
+router.patch('/name/:id', authenticate, TLController.updateName);
 
 /**
    * @swagger
@@ -794,6 +783,6 @@ router.patch('/name/:id', authenticate, updateTaskListName);
    *             example:
    *               error: "Ha ocurrido un error inesperado en el servidor"
    */
-router.put('/:id', authenticate, updateTaskList);
+router.put('/:id', authenticate, TLController.update);
 
 export default router;

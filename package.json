@@ -2,11 +2,11 @@
   "name": "prioritease_backend",
   "version": "1.0.0",
   "description": "Task gestor app with innovative design",
-  "main": "source/app.mjs",
+  "main": "dist/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon source/app.mjs",
-    "start": "node source/app.mjs"
+    "dev": "tsc && npx typesync && nodemon dist/app.js",
+    "start": "tsc && npx typesync && node dist/app.js"
   },
   "repository": {
     "type": "git",
@@ -40,10 +40,23 @@
     "sqlite3": "^5.1.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "typesync": "^0.14.1",
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.24.1"
   },
   "devDependencies": {
+    "@types/bcryptjs": "~2.4.6",
+    "@types/cors": "~2.8.17",
+    "@types/eslint": "~9.6.1",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.8",
+    "@types/multer": "~1.4.12",
+    "@types/nodemailer": "~6.4.17",
+    "@types/swagger-jsdoc": "~6.0.4",
+    "@types/swagger-ui-express": "~4.1.7",
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
+    "@typescript-eslint/parser": "^8.24.0",
+    "eslint": "^8.57.1",
     "semistandard": "^17.0.0"
   },
   "eslintConfig": {

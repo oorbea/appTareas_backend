@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // Versión de ECMAScript a la que compilar
+    "module": "commonjs", // Usar CommonJS (estándar en Node.js)
+    "outDir": "./dist", // Carpeta de salida para los archivos compilados
+    "strict": true, // Habilitar todas las opciones de tipo estricto
+    "esModuleInterop": true, // Permitir la interoperabilidad entre CommonJS y ES Modules
+    "skipLibCheck": true, // Omitir la verificación de tipos en archivos de declaración
+    "forceConsistentCasingInFileNames": true // Forzar consistencia en mayúsculas/minúsculas en nombres de archivos
+  },
+  "include": ["source/**/*"], // Incluir todos los archivos en la carpeta source
+  "exclude": ["node_modules"] // Excluir la carpeta node_modules
+}

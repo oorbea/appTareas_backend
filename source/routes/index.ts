@@ -1,8 +1,8 @@
 import express from 'express';
-import userRoutes from './userRoutes.mjs';
-import taskListRoutes from './taskListRoutes.mjs';
-import taskRoutes from './taskRoutes.mjs';
-import adminRoutes from './adminRoutes.mjs';
+import userRoutes from './userRoutes';
+import taskListRoutes from './taskListRoutes';
+import taskRoutes from './taskRoutes';
+import adminRoutes from './adminRoutes';
 
 const router = express.Router();
 

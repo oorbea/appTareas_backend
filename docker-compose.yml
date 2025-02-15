@@ -35,6 +35,7 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      - /usr/src/app/dist
     depends_on:
       - db
 

@@ -1,0 +1,17 @@
+{
+    "parser": "@typescript-eslint/parser", // Usar el parser de TypeScript
+    "plugins": ["@typescript-eslint"], // Habilitar el plugin de TypeScript
+    "extends": [
+      "semistandard", // Extender la configuración de semistandard
+      "plugin:@typescript-eslint/recommended" // Añadir reglas recomendadas de TypeScript
+    ],
+    "rules": {
+      // Aquí puedes añadir o sobrescribir reglas según tus preferencias
+      "semi": ["error", "always"], // Asegurar que se usen punto y coma
+      "@typescript-eslint/no-unused-vars": "warn" // Mostrar advertencias para variables no usadas
+    },
+    "env": {
+      "node": true, // Habilitar variables globales de Node.js
+      "es2021": true // Habilitar características de ES2021
+    }
+  }

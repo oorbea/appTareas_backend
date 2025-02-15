@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { userSchemaSwagger } from './schemas/userSchema.mjs';
-import { taskListSchemaSwagger } from './schemas/taskListSchema.mjs';
-import { taskSchemaSwagger } from './schemas/taskSchema.mjs';
+import { userSchemaSwagger } from './schemas/userSchema';
+import { taskListSchemaSwagger } from './schemas/taskListSchema';
+import { taskSchemaSwagger } from './schemas/taskSchema';
 
 dotenv.config();
 
@@ -67,15 +67,19 @@ const options = {
       }
     }
   },
-  apis: ['./source/routes/*.mjs']
+  apis: ['./source/routes/*']
 };
 
 const swaggerSpec = swaggerJsdoc(options);
 
 console.log('Especificación de Swagger:', swaggerSpec);
 
-const setupSwagger = app => {
+interface SetupSwagger {
+  (app: import('express').Application): void;
+}
+
+const setupSwagger: SetupSwagger = (app) => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 };
 
-export { setupSwagger };
+export default setupSwagger;

@@ -1,30 +1,31 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
-import { User } from '../models/user.mjs';
+import User from '../models/user';
 
 dotenv.config();
 
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
-
-const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  port: 465,
-  secure: true,
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASSWORD
+class Mailer {
+  #transporter!: nodemailer.Transporter;
+  constructor () {
+    this.#transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+      }
+    });
   }
-});
 
-async function sendPasswordResetEmail (email, token) {
-  const user = await User.findOne({ where: { email, enabled: true } });
-  const username = user ? user.username : 'Usuario';
-  const mailOptions = {
-    from: 'prioritease.noreply',
-    to: email,
-    subject: 'Restablecer Contraseña',
-    html: `
+  public async sendPasswordResetEmail (email: string, token: string | number) {
+    const user = await User.findOne({ where: { email, enabled: true } });
+    const username = user ? user.username : 'Usuario';
+    const mailOptions = {
+      from: 'prioritease.noreply',
+      to: email,
+      subject: 'Restablecer Contraseña',
+      html: `
         <!DOCTYPE html>
         <html lang="es">
         <head>
@@ -91,9 +92,10 @@ async function sendPasswordResetEmail (email, token) {
         </body>
         </html>
     `
-  };
+    };
 
-  await transporter.sendMail(mailOptions);
+    await this.#transporter.sendMail(mailOptions);
+  }
 }
 
-export { sendPasswordResetEmail };
+export default Mailer;

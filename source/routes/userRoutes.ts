@@ -1,23 +1,7 @@
 import express from 'express';
-import { authenticate } from '../authenticate.mjs';
-import { uploadImage } from '../utils/upload.mjs';
-import {
-  registerUser,
-  loginUser,
-  disableUserPublic,
-  disableUserAdmin,
-  uploadProfilePicturePublic,
-  uploadProfilePictureAdmin,
-  getProfilePicturePublic,
-  getProfilePictureAdmin,
-  updateUserPublic,
-  updateUserAdmin,
-  forgotPassword,
-  resetPassword,
-  getUserByIdAdmin,
-  getAllUsersAdmin,
-  getUserPublic
-} from '../controllers/userFunctions.mjs';
+import authenticate from '../authenticate';
+import uploadImage from '../utils/upload';
+import uCon from '../controllers/userController';
 
 const router = express.Router();
 
@@ -66,7 +50,7 @@ const router = express.Router();
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/register', registerUser);
+router.post('/register', uCon.register);
 
 /**
  * @swagger
@@ -112,7 +96,7 @@ router.post('/register', registerUser);
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/login', loginUser);
+router.post('/login', uCon.login);
 
 /**
  * @swagger
@@ -198,7 +182,7 @@ router.post('/login', loginUser);
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-router.patch('/disable', authenticate, disableUserPublic);
+router.patch('/disable', authenticate, uCon.disablePublic);
 
 /**
  * @swagger
@@ -291,7 +275,7 @@ router.patch('/disable', authenticate, disableUserPublic);
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-router.patch('/disable/:id', authenticate, disableUserAdmin);
+router.patch('/disable/:id', authenticate, uCon.disableAdmin);
 
 /**
    * @swagger
@@ -380,7 +364,7 @@ router.patch('/disable/:id', authenticate, disableUserAdmin);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.post('/upload_picture', authenticate, uploadImage.single('profilePicture'), uploadProfilePicturePublic);
+router.post('/upload_picture', authenticate, uploadImage.single('profilePicture'), uCon.uploadProfilePicturePublic);
 
 /**
    * @swagger
@@ -476,7 +460,7 @@ router.post('/upload_picture', authenticate, uploadImage.single('profilePicture'
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.post('/upload_picture/:id', authenticate, uploadImage.single('profilePicture'), uploadProfilePictureAdmin);
+router.post('/upload_picture/:id', authenticate, uploadImage.single('profilePicture'), uCon.uploadProfilePictureAdmin);
 
 /**
    * @swagger
@@ -538,7 +522,7 @@ router.post('/upload_picture/:id', authenticate, uploadImage.single('profilePict
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.get('/picture', authenticate, getProfilePicturePublic);
+router.get('/picture', authenticate, uCon.getProfilePicturePublic);
 
 /**
    * @swagger
@@ -607,7 +591,7 @@ router.get('/picture', authenticate, getProfilePicturePublic);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.get('/picture/:id', authenticate, getProfilePictureAdmin);
+router.get('/picture/:id', authenticate, uCon.getProfilePictureAdmin);
 
 /**
    * @swagger
@@ -683,7 +667,7 @@ router.get('/picture/:id', authenticate, getProfilePictureAdmin);
    *       500:
    *         description: Error interno del servidor
    */
-router.put('/', authenticate, updateUserPublic);
+router.put('/', authenticate, uCon.updatePublic);
 
 /**
    * @swagger
@@ -759,7 +743,7 @@ router.put('/', authenticate, updateUserPublic);
    *       500:
    *         description: Error interno del servidor
    */
-router.put('/:id', authenticate, updateUserAdmin);
+router.put('/:id', authenticate, uCon.updateAdmin);
 
 /**
    * @swagger
@@ -813,7 +797,7 @@ router.put('/:id', authenticate, updateUserAdmin);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.post('/forgot_password', forgotPassword);
+router.post('/forgot_password', uCon.forgotPassword);
 
 /**
    * @swagger
@@ -879,7 +863,7 @@ router.post('/forgot_password', forgotPassword);
    *                   type: string
    *                   example: Error en el servidor
    */
-router.patch('/reset_password', resetPassword);
+router.patch('/reset_password', uCon.resetPassword);
 
 /**
    * @swagger
@@ -944,7 +928,7 @@ router.patch('/reset_password', resetPassword);
    *                   type: string
    *                   example: "Ha ocurrido un error inesperado en el servidor"
    */
-router.get('/id/:id', authenticate, getUserByIdAdmin);
+router.get('/id/:id', authenticate, uCon.getByIdAdmin);
 
 /**
    * @swagger
@@ -994,7 +978,7 @@ router.get('/id/:id', authenticate, getUserByIdAdmin);
    *                   type: string
    *                   example: "Ha ocurrido un error inesperado en el servidor"
    */
-router.get('/all', authenticate, getAllUsersAdmin);
+router.get('/all', authenticate, uCon.getAllAdmin);
 
 /**
  * @swagger
@@ -1052,6 +1036,6 @@ router.get('/all', authenticate, getAllUsersAdmin);
  *                   type: string
  *                   example: "Ha ocurrido un error inesperado en el servidor"
  */
-router.get('/', authenticate, getUserPublic);
+router.get('/', authenticate, uCon.getPublic);
 
 export default router;

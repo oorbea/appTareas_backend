@@ -1,6 +1,6 @@
 import express from 'express';
-import { authenticate } from '../authenticate.mjs';
-import * as taskFunctions from '../controllers/taskFunctions.mjs';
+import authenticate from '../authenticate';
+import taskController from '../controllers/taskController';
 
 const router = express.Router();
 
@@ -69,7 +69,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-router.post('/', authenticate, taskFunctions.createTask);
+router.post('/', authenticate, taskController.createPublic);
 
 /**
  * @swagger
@@ -160,7 +160,7 @@ router.post('/', authenticate, taskFunctions.createTask);
  *                   type: string
  *                   example: Ha ocurrido un error inesperado en el servidor
  */
-router.post('/:user', authenticate, taskFunctions.createTaskAdmin);
+router.post('/:user', authenticate, taskController.createAdmin);
 
 /**
    * @swagger
@@ -205,7 +205,7 @@ router.post('/:user', authenticate, taskFunctions.createTaskAdmin);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.get('/', authenticate, taskFunctions.getMyTasks);
+router.get('/', authenticate, taskController.getMine);
 
 /**
    * @swagger
@@ -260,6 +260,6 @@ router.get('/', authenticate, taskFunctions.getMyTasks);
    *                   type: string
    *                   example: Ha ocurrido un error inesperado en el servidor
    */
-router.get('/all', authenticate, taskFunctions.getAllTasks);
+router.get('/all', authenticate, taskController.getAll);
 
 export default router;
