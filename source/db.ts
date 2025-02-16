@@ -19,6 +19,7 @@ abstract class Database {
 
   abstract connectDB (): Promise<void>;
   abstract createTables (): Promise<Sequelize>;
+  abstract dropTables (): Promise<unknown[]>;
   abstract getSequelize (): Sequelize;
 }
 
@@ -36,8 +37,18 @@ class MySQLDatabase extends Database {
     }
   }
 
+  public async dropPascalCaseTables () {
+    await this.sequelize.getQueryInterface().dropTable('Tasks');
+    await this.sequelize.getQueryInterface().dropTable('TaskLists');
+    await this.sequelize.getQueryInterface().dropTable('Users');
+  }
+
   public async createTables () {
-    return this.sequelize.sync({ alter: true });
+    return this.sequelize.sync();
+  }
+
+  public async dropTables () {
+    return this.sequelize.drop();
   }
 
   public getSequelize () {

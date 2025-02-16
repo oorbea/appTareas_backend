@@ -19,6 +19,7 @@ const BASE_URL = `http://localhost:${PORT}`;
 async function setUpDB () {
   try {
     await db.connectDB();
+    await db.dropPascalCaseTables();
     await db.createTables();
   } catch (error) {
     console.error('Error connecting to database:', error);
