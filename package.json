@@ -5,8 +5,9 @@
   "main": "dist/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsc && npx typesync && nodemon dist/app.js",
-    "start": "tsc && npx typesync && node dist/app.js"
+    "build": "tsc",
+    "dev": "nodemon dist/app.js",
+    "start": "node dist/app.js"
   },
   "repository": {
     "type": "git",
@@ -17,7 +18,8 @@
     "backend",
     "node",
     "express",
-    "js"
+    "javascript",
+    "typescript"
   ],
   "author": "Oriol Orbea",
   "license": "ISC",
@@ -48,8 +50,8 @@
     "@types/bcryptjs": "~2.4.6",
     "@types/cors": "~2.8.17",
     "@types/eslint": "~9.6.1",
-    "@types/express": "^5.0.0",
-    "@types/jsonwebtoken": "^9.0.8",
+    "@types/express": "~5.0.0",
+    "@types/jsonwebtoken": "~9.0.8",
     "@types/multer": "~1.4.12",
     "@types/nodemailer": "~6.4.17",
     "@types/swagger-jsdoc": "~6.0.4",
@@ -57,7 +59,8 @@
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
     "eslint": "^8.57.1",
-    "semistandard": "^17.0.0"
+    "semistandard": "^17.0.0",
+    "typescript": "^5.7.3"
   },
   "eslintConfig": {
     "extends": "semistandard"
