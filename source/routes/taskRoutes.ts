@@ -262,4 +262,70 @@ router.get('/', authenticate, taskController.getMine);
    */
 router.get('/all', authenticate, taskController.getAll);
 
+/**
+ * @swagger
+ * /prioritease_api/task/id/{id}:
+ *   get:
+ *     summary: Obtiene una tarea por su ID
+ *     description: Retorna la información de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a obtener
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Datos de la tarea obtenidos correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 user:
+ *                   type: integer
+ *                 title:
+ *                   type: string
+ *                 details:
+ *                   type: string
+ *                 deadline:
+ *                   type: string
+ *                   format: date
+ *                 parent:
+ *                   type: integer
+ *                   nullable: true
+ *                 difficulty:
+ *                   type: integer
+ *                 lat:
+ *                   type: number
+ *                 lng:
+ *                   type: number
+ *                 list:
+ *                   type: integer
+ *                 favourite:
+ *                   type: boolean
+ *                 done:
+ *                   type: boolean
+ *       400:
+ *         description: ID de tarea no proporcionado o inválido
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: Token inválido o caducado
+ *       404:
+ *         description: Tarea no encontrada o no disponible
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.get('/id/:id', authenticate, taskController.getById);
+
 export default router;
