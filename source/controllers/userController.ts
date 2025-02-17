@@ -87,6 +87,7 @@ class UserController {
   }
 
   public async disablePublic (req: Request, res: Response): Promise<void> {
+    // TODO: Cuando se deshabilita a un usuario, se debe deshabilitar también todas sus tareas, listas de tareas y notificaciones
     if (!req.user) {
       res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
       return;
@@ -118,6 +119,7 @@ class UserController {
   }
 
   public async disableAdmin (req: Request, res: Response): Promise<void> {
+    // TODO: Cuando se deshabilita a un usuario, se debe deshabilitar también todas sus tareas, listas de tareas y notificaciones
     if (!req.user || !req.user.admin) {
       res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
       return;
