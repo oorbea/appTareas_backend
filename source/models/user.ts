@@ -35,6 +35,11 @@ class User extends Model<UserAttributes, Optional<UserAttributes, 'id' | 'pictur
   public async comparePassword (password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
   }
+
+  public async encryptPassword (password: string): Promise<void> {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(password, salt);
+  }
 }
 
 User.init(
@@ -85,12 +90,6 @@ User.init(
     modelName: 'user',
     hooks: {
       beforeCreate: async (user: User) => {
-        if (user.password) {
-          const salt = await bcrypt.genSalt(10);
-          user.password = await bcrypt.hash(user.password, salt);
-        }
-      },
-      beforeUpdate: async (user: User) => {
         if (user.password) {
           const salt = await bcrypt.genSalt(10);
           user.password = await bcrypt.hash(user.password, salt);
