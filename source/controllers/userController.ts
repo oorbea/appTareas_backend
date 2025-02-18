@@ -329,6 +329,7 @@ class UserController {
       await user.update(updatedData);
       if (password) {
         await user.encryptPassword(password);
+        await user.save();
       }
 
       res.status(200).json({
@@ -402,6 +403,7 @@ class UserController {
       await user.update(updatedData);
       if (password) {
         await user.encryptPassword(password);
+        await user.save();
       }
 
       res.status(200).json({
@@ -478,8 +480,9 @@ class UserController {
         resetPasswordExpires: null
       };
 
-      await user.encryptPassword(newPassword);
       await user.update(updatedData);
+      await user.encryptPassword(newPassword);
+      await user.save();
 
       res.status(200).json({ message: 'Contraseña actualizada correctamente' });
     } catch (error) {
