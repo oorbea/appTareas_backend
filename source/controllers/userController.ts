@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import User from '../models/user';
+import Task from '../models/task';
+import TaskList from '../models/taskList';
+import Notification from '../models/notification';
 import Validation from '../validations';
 import Mailer from '../utils/emailSender';
 import generateRandomNum from '../utils/randomNumberGenerator';
@@ -20,12 +23,16 @@ class UserController {
 
       const { username, email, password, picture } = req.body;
       const existingUser = await User.findOne({ where: { email } });
-      if (existingUser && existingUser.enabled) {
-        res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
-        return;
+      if (existingUser) {
+        if (existingUser.enabled) {
+          res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
+          return;
+        }
+        await Notification.destroy({ where: { user: existingUser.id }, cascade: true });
+        await Task.destroy({ where: { user: existingUser.id }, cascade: true });
+        await TaskList.destroy({ where: { user: existingUser.id }, cascade: true });
+        await User.destroy({ where: { email }, cascade: true });
       }
-
-      await User.destroy({ where: { email } });
 
       const newUser = await User.create({
         username,
@@ -322,7 +329,10 @@ class UserController {
       };
 
       await user.update(updatedData);
-      if (password) await user.update({ password });
+      if (password) {
+        await user.encryptPassword(password);
+        await user.save();
+      }
 
       res.status(200).json({
         message: 'Usuario actualizado exitosamente',
@@ -393,7 +403,10 @@ class UserController {
       };
 
       await user.update(updatedData);
-      if (password) await user.update({ password });
+      if (password) {
+        await user.encryptPassword(password);
+        await user.save();
+      }
 
       res.status(200).json({
         message: 'Usuario actualizado exitosamente',
@@ -465,12 +478,13 @@ class UserController {
       }
 
       const updatedData = {
-        password: newPassword,
         resetPasswordCode: null,
         resetPasswordExpires: null
       };
 
       await user.update(updatedData);
+      await user.encryptPassword(newPassword);
+      await user.save();
 
       res.status(200).json({ message: 'Contraseña actualizada correctamente' });
     } catch (error) {
