@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import Task from '../models/task';
 import TaskList from '../models/taskList';
+import User from '../models/user';
 import Validation from '../validations';
 
 dotenv.config();
@@ -21,6 +22,7 @@ class TaskController {
       }
       const user = req.user.id;
       const { title, details, deadline, parent, difficulty, lat, lng, list, favourite, done } = req.body;
+
       if ((typeof lat === 'number' && typeof lng !== 'number') || (typeof lat !== 'number' && typeof lng === 'number')) {
         res.status(400).json({ error: 'Ubicación de la tarea incorrecta' });
         return;
@@ -38,6 +40,13 @@ class TaskController {
         const taskList = await TaskList.findByPk(list);
         if (!taskList || !taskList.enabled || taskList.user !== user) {
           res.status(404).json({ error: 'La lista de tareas no existe' });
+          return;
+        }
+      }
+
+      if (difficulty) {
+        if (difficulty < 1 || difficulty > 5) {
+          res.status(400).json({ error: 'La dificultad debe ser un número entre 1 y 5' });
           return;
         }
       }
@@ -102,6 +111,11 @@ class TaskController {
         res.status(400).json({ error: result2.error.issues[0].message });
         return;
       }
+      const userExists = await User.findByPk(user);
+      if (!userExists || !userExists.enabled) {
+        res.status(404).json({ error: 'El usuario no existe' });
+        return;
+      }
 
       const { title, details, deadline, parent, difficulty, lat, lng, list, favourite, done } = req.body;
       if ((typeof lat === 'number' && typeof lng !== 'number') || (typeof lat !== 'number' && typeof lng === 'number')) {
@@ -121,6 +135,13 @@ class TaskController {
         const taskList = await TaskList.findByPk(list);
         if (!taskList || !taskList.enabled || taskList.user !== user) {
           res.status(404).json({ error: 'La lista de tareas no existe' });
+          return;
+        }
+      }
+
+      if (difficulty) {
+        if (difficulty < 1 || difficulty > 5) {
+          res.status(400).json({ error: 'La dificultad debe ser un número entre 1 y 5' });
           return;
         }
       }
@@ -233,6 +254,140 @@ class TaskController {
       });
     } catch (error) {
       console.error('Error al obtener tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async update (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const result = Validation.validateTask(req.body);
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+      const { title, details, user, deadline, parent, difficulty, lat, lng, list, favourite, done, enabled } = req.body;
+
+      if (parent) {
+        const taskParent = await Task.findByPk(parent);
+        if (!taskParent || !taskParent.enabled || taskParent.user !== taskUser || taskParent.id === id) {
+          res.status(404).json({ error: 'La tarea padre no es válida' });
+          return;
+        }
+      }
+      if (difficulty) {
+        if (difficulty < 1 || difficulty > 5) {
+          res.status(400).json({ error: 'La dificultad debe ser un número entre 1 y 5' });
+          return;
+        }
+      }
+
+      if (lat || lng) {
+        if ((typeof lat === 'number' && typeof lng !== 'number') || (typeof lat !== 'number' && typeof lng === 'number')) {
+          res.status(400).json({ error: 'Ubicación de la tarea incorrecta' });
+          return;
+        }
+      }
+
+      if (list) {
+        const taskList = await TaskList.findByPk(list);
+        if (!taskList || !taskList.enabled || taskList.user !== taskUser) {
+          res.status(404).json({ error: 'La lista de tareas no existe' });
+          return;
+        }
+      }
+
+      if (user) {
+        if (!req.user.admin) {
+          res.status(403).json({ error: 'No tienes permisos para actualizar el usuario de esta tarea' });
+          return;
+        }
+
+        const result = Validation.validateTaskUser({ user });
+        if (result.error) {
+          res.status(400).json({ error: result.error.issues[0].message });
+          return;
+        }
+
+        const userExists = await User.findByPk(user);
+        if (!userExists || !userExists.enabled) {
+          res.status(404).json({ error: 'El usuario no existe' });
+          return;
+        }
+
+        await task.update({ user });
+      }
+
+      const updatedData = {
+        title: title ?? task.title,
+        details: details ?? task.details,
+        deadline: deadline ?? task.deadline,
+        parent: parent ?? task.parent,
+        difficulty: difficulty ?? task.difficulty,
+        lat: lat ?? task.lat,
+        lng: lng ?? task.lng,
+        list: list ?? task.list,
+        favourite: favourite ?? task.favourite,
+        done: done ?? task.done,
+        enabled: enabled ?? task.enabled
+      };
+
+      await task.update(updatedData);
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async updateTitle (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const title = req.body.title;
+      const result = Validation.validateTaskTitle({ title });
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+
+      await task.update({ title });
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar título de tarea:', error);
       res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
     }
   }

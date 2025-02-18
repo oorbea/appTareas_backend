@@ -1,6 +1,6 @@
 import { userSchema, usernameSchema, passwordSchema, emailSchema } from './schemas/userSchema';
 import { taskListSchema, taskListNameSchema } from './schemas/taskListSchema';
-import { taskSchema, taskUserSchema } from './schemas/taskSchema';
+import { taskSchema, taskTitleSchema, taskUserSchema } from './schemas/taskSchema';
 
 class Validation {
   public static validateUser (user: object) {
@@ -33,6 +33,10 @@ class Validation {
 
   public static validateTaskUser (user: object) {
     return taskUserSchema.safeParse(user);
+  }
+
+  public static validateTaskTitle (title: object) {
+    return taskTitleSchema.safeParse(title);
   }
 }
 

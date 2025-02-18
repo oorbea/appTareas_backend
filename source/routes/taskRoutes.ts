@@ -140,7 +140,7 @@ router.post('/', authenticate, taskController.createPublic);
  *                   type: string
  *                   example: No tienes permisos para acceder a esta ruta
  *       404:
- *         description: La tarea padre o la lista de tareas no existen
+ *         description: El usuario, la tarea padre o la lista de tareas no existen
  *         content:
  *           application/json:
  *             schema:
@@ -327,5 +327,109 @@ router.get('/all', authenticate, taskController.getAll);
  *         description: Error inesperado en el servidor
  */
 router.get('/id/:id', authenticate, taskController.getById);
+
+/**
+ * @swagger
+ * /prioritease_api/task/{id}:
+ *   put:
+ *     summary: Actualiza una tarea existente
+ *     description: Modifica los datos de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Task'
+ *     responses:
+ *       200:
+ *         description: La tarea ha sido actualizada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea o usuario no encontrado
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.put('/:id', authenticate, taskController.update);
+
+/**
+ * @swagger
+ * /prioritease_api/task/title/{id}:
+ *   patch:
+ *     summary: Actualiza solo el título de una tarea
+ *     description: Modifica el título de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: Nuevo título de tarea
+ *     responses:
+ *       200:
+ *         description: El título de la tarea ha sido actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/title/:id', authenticate, taskController.updateTitle);
+
+// router.patch('/details/:id', authenticate, taskController.updateDetails);
+// router.patch('/deadline/:id', authenticate, taskController.updateDeadline);
+// router.patch('/parent/:id', authenticate, taskController.updateParent);
+// router.patch('/difficulty/:id', authenticate, taskController.updateDifficulty);
+// router.patch('/location/:id', authenticate, taskController.updateLocation);
+// router.patch('/list/:id', authenticate, taskController.updateList);
+// router.patch('/favourite/:id', authenticate, taskController.updateFavourite);
+// router.patch('/done/:id', authenticate, taskController.updateDone);
+// router.patch('/disable/:id', authenticate, taskController.disable);
 
 export default router;

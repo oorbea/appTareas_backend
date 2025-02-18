@@ -28,10 +28,10 @@ class UserController {
           res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
           return;
         }
-        await Notification.destroy({ where: { user: existingUser.id }, cascade: true });
-        await Task.destroy({ where: { user: existingUser.id }, cascade: true });
-        await TaskList.destroy({ where: { user: existingUser.id }, cascade: true });
-        await User.destroy({ where: { email }, cascade: true });
+        await Notification.destroy({ where: { user: existingUser.id } });
+        await Task.destroy({ where: { user: existingUser.id } });
+        await TaskList.destroy({ where: { user: existingUser.id } });
+        await User.destroy({ where: { email } });
       }
 
       const newUser = await User.create({

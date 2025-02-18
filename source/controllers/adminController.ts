@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import User from '../models/user';
+import Notification from '../models/notification';
+import Task from '../models/task';
+import TaskList from '../models/taskList';
 import Validation from '../validations';
 
 dotenv.config();
@@ -13,7 +16,26 @@ class AdminController {
       const email = process.env.ADMIN_EMAIL as string;
       const password = process.env.ADMIN_PASSWORD as string;
 
-      await User.destroy({ where: { email } });
+      const existingAdmin = await User.findOne({ where: { email } });
+      if (existingAdmin) {
+        if (existingAdmin.enabled) {
+          console.log('Admin ya registrado: ');
+          console.log({
+            id: existingAdmin.id,
+            username: existingAdmin.username,
+            email: existingAdmin.email,
+            picture: existingAdmin.picture,
+            admin: existingAdmin.admin,
+            enabled: existingAdmin.enabled
+          });
+          return;
+        }
+
+        await Notification.destroy({ where: { user: existingAdmin.id } });
+        await Task.destroy({ where: { user: existingAdmin.id } });
+        await TaskList.destroy({ where: { user: existingAdmin.id } });
+        await User.destroy({ where: { email } });
+      }
       const admin = await User.create({
         username,
         email,
@@ -32,7 +54,7 @@ class AdminController {
         enabled: admin.enabled
       });
     } catch (error) {
-      console.error('Error al registrar admin:', error);
+      console.error('Error al registrar admin: ', error);
     }
   }
 

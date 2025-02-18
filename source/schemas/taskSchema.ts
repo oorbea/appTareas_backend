@@ -44,6 +44,12 @@ export const taskSchema = z.object({
     .optional()
 });
 
+export const taskTitleSchema = z.object({
+  title: z.string({ message: 'El título debe ser un string' })
+    .max(50, { message: 'El título no puede exceder los 50 carácteres de longitud' })
+    .nonempty({ message: 'El título es obligatorio' })
+});
+
 export const taskUserSchema = z.object({
   user: z.number({ message: 'El usuario debe ser un número' })
     .int({ message: 'El usuario debe ser un número entero' })
