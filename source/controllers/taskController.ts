@@ -3,7 +3,6 @@ import dotenv from 'dotenv';
 import Task from '../models/task';
 import TaskList from '../models/taskList';
 import User from '../models/user';
-import Validation from '../validations';
 
 dotenv.config();
 
@@ -15,7 +14,7 @@ class TaskController {
     }
 
     try {
-      const result = Validation.validateTask(req.body);
+      const result = Task.validate(req.body);
       if (result.error) {
         res.status(400).json({ error: result.error.issues[0].message });
         return;
@@ -95,7 +94,7 @@ class TaskController {
     }
 
     try {
-      const result1 = Validation.validateTask(req.body);
+      const result1 = Task.validate(req.body);
       if (result1.error) {
         res.status(400).json({ error: result1.error.issues[0].message });
         return;
@@ -106,7 +105,7 @@ class TaskController {
         res.status(400).json({ error: 'El usuario es requerido' });
         return;
       }
-      const result2 = Validation.validateTaskUser({ user });
+      const result2 = Task.validateUser({ user });
       if (result2.error) {
         res.status(400).json({ error: result2.error.issues[0].message });
         return;
@@ -277,7 +276,7 @@ class TaskController {
         res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
         return;
       }
-      const result = Validation.validateTask(req.body);
+      const result = Task.validate(req.body);
       if (result.error) {
         res.status(400).json({ error: result.error.issues[0].message });
         return;
@@ -319,7 +318,7 @@ class TaskController {
           return;
         }
 
-        const result = Validation.validateTaskUser({ user });
+        const result = Task.validateUser({ user });
         if (result.error) {
           res.status(400).json({ error: result.error.issues[0].message });
           return;
@@ -377,7 +376,7 @@ class TaskController {
         return;
       }
       const title = req.body.title;
-      const result = Validation.validateTaskTitle({ title });
+      const result = Task.validateTitle({ title });
       if (result.error) {
         res.status(400).json({ error: result.error.issues[0].message });
         return;
@@ -388,6 +387,333 @@ class TaskController {
       res.status(200).json(task);
     } catch (error) {
       console.error('Error al actualizar título de tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async updateDetails (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const details = req.body.details;
+      const result = Task.validateDetails({ details });
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+
+      await task.update({ details });
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar detalles de tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async updateDeadline (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const deadline = req.body.deadline;
+      const result = Task.validateDeadline({ deadline });
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+
+      await task.update({ deadline });
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar fecha límite de tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async updateParent (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const parent = req.body.parent;
+      const result = Task.validateParent({ parent });
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+      if (parent) {
+        const taskParent = await Task.findByPk(parent);
+        if (!taskParent || !taskParent.enabled || taskParent.user !== task.user || taskParent.id === id) {
+          res.status(404).json({ error: 'La tarea padre no es válida' });
+          return;
+        }
+      }
+
+      await task.update({ parent });
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar tarea padre de tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async updateDifficulty (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const difficulty = req.body.difficulty;
+      const result = Task.validateDifficulty({ difficulty });
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+
+      await task.update({ difficulty });
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar dificultad de tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async updateLocation (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const { lat, lng } = req.body;
+      const result = Task.validateLocation({ lat, lng });
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+      if ((typeof lat === 'number' && typeof lng !== 'number') || (typeof lat !== 'number' && typeof lng === 'number')) {
+        res.status(400).json({ error: 'Ubicación de la tarea incorrecta' });
+        return;
+      }
+
+      await task.update({ lat, lng });
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar ubicación de tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async updateList (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const list = req.body.list;
+      const result = Task.validateList({ list });
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+      if (list) {
+        const taskList = await TaskList.findByPk(list);
+        if (!taskList || !taskList.enabled || taskList.user !== task.user) {
+          res.status(404).json({ error: 'La lista de tareas no existe' });
+          return;
+        }
+      }
+
+      await task.update({ list });
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar lista de tareas de tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async updateFavourite (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const favourite = req.body.favourite;
+      const result = Task.validateFavourite({ favourite });
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+
+      await task.update({ favourite });
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar el favorito de tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async updateDone (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para actualizar esta tarea' });
+        return;
+      }
+      const done = req.body.done;
+      const result = Task.validateDone({ done });
+      if (result.error) {
+        res.status(400).json({ error: result.error.issues[0].message });
+        return;
+      }
+
+      await task.update({ done });
+
+      res.status(200).json(task);
+    } catch (error) {
+      console.error('Error al actualizar el completado de tarea:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
+  public async disable (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const taskUser = req.user.id;
+      const id = parseInt(req.params.id);
+
+      const task = await Task.findByPk(id);
+      if (!task || !task.enabled) {
+        res.status(404).json({ error: 'La tarea no existe' });
+        return;
+      }
+      if (task.user !== taskUser && !req.user.admin) {
+        res.status(403).json({ error: 'No tienes permisos para deshabilitar esta tarea' });
+        return;
+      }
+
+      await task.update({ enabled: false });
+
+      res.status(200).json({ message: 'La tarea ha sido deshabilitada correctamente', task });
+    } catch (error) {
+      console.error('Error al deshabilitar tarea:', error);
       res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
     }
   }

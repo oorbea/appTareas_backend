@@ -1,5 +1,6 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
+import { taskDetailsSchema, taskSchema, taskTitleSchema, taskUserSchema, taskDeadlineSchema, taskParentSchema, taskDifficultySchema, taskLocationSchema, taskListSchema, taskFavouriteSchema, taskDoneSchema } from '../schemas/taskSchema';
 
 interface TaskAttributes {
   id: number;
@@ -31,6 +32,50 @@ class Task extends Model<TaskAttributes, Optional<TaskAttributes, 'id' | 'detail
   public favourite!: boolean;
   public done!: boolean;
   public enabled!: boolean;
+
+  public static validate (task: object) {
+    return taskSchema.safeParse(task);
+  }
+
+  public static validateUser (user: object) {
+    return taskUserSchema.safeParse(user);
+  }
+
+  public static validateTitle (title: object) {
+    return taskTitleSchema.safeParse(title);
+  }
+
+  public static validateDetails (details: object) {
+    return taskDetailsSchema.safeParse(details);
+  }
+
+  public static validateDeadline (deadline: object) {
+    return taskDeadlineSchema.safeParse(deadline);
+  }
+
+  public static validateParent (parent: object) {
+    return taskParentSchema.safeParse(parent);
+  }
+
+  public static validateDifficulty (difficulty: object) {
+    return taskDifficultySchema.safeParse(difficulty);
+  }
+
+  public static validateLocation (location: object) {
+    return taskLocationSchema.safeParse(location);
+  }
+
+  public static validateList (list: object) {
+    return taskListSchema.safeParse(list);
+  }
+
+  public static validateFavourite (favourite: object) {
+    return taskFavouriteSchema.safeParse(favourite);
+  }
+
+  public static validateDone (done: object) {
+    return taskDoneSchema.safeParse(done);
+  }
 }
 
 Task.init({
@@ -78,25 +123,11 @@ Task.init({
   },
   lat: {
     type: DataTypes.DECIMAL(10, 8),
-    allowNull: true,
-    validate: {
-      notNullIfLng (value: number | null): void {
-        if (value !== null && this.lng === null) {
-          throw new Error('La longitud no puede ser nula si la latitud no es nula');
-        }
-      }
-    }
+    allowNull: true
   },
   lng: {
     type: DataTypes.DECIMAL(11, 8),
-    allowNull: true,
-    validate: {
-      notNullIfLat (value: number | null): void {
-        if (value !== null && this.lat === null) {
-          throw new Error('La latitud no puede ser nula si la longitud no es nula');
-        }
-      }
-    }
+    allowNull: true
   },
   list: {
     type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,

@@ -54,7 +54,7 @@ const options = {
           example: {
             title: 'Comprar leche',
             details: 'La leche debería ser desnatada',
-            deadline: '2021-12-31',
+            deadline: '2003-05-09',
             parent: 1234567890,
             difficulty: 2,
             lat: 40.416775,

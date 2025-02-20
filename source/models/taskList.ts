@@ -1,5 +1,6 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
+import { taskListSchema, taskListNameSchema } from '../schemas/taskListSchema';
 
 interface TaskListAttributes {
   id: number;
@@ -13,6 +14,14 @@ class TaskList extends Model<TaskListAttributes, Optional<TaskListAttributes, 'i
   public user!: number;
   public name!: string;
   public enabled!: boolean;
+
+  public static validate (taskList: object) {
+    return taskListSchema.safeParse(taskList);
+  }
+
+  public static validateName (taskList: object) {
+    return taskListNameSchema.safeParse(taskList);
+  }
 }
 
 TaskList.init(

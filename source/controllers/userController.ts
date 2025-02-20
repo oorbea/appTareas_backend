@@ -5,7 +5,6 @@ import User from '../models/user';
 import Task from '../models/task';
 import TaskList from '../models/taskList';
 import Notification from '../models/notification';
-import Validation from '../validations';
 import Mailer from '../utils/emailSender';
 import generateRandomNum from '../utils/randomNumberGenerator';
 import dotenv from 'dotenv';
@@ -15,7 +14,7 @@ dotenv.config();
 class UserController {
   public async register (req: Request, res: Response): Promise<void> {
     try {
-      const result = Validation.validateUser(req.body);
+      const result = User.validate(req.body);
       if (result.error) {
         res.status(400).json({ error: result.error.issues[0].message });
         return;
@@ -291,21 +290,21 @@ class UserController {
       const { username, email, password, picture } = req.body;
 
       if (username) {
-        const usernameValidation = Validation.validateUsername({ username: req.body.username });
+        const usernameValidation = User.validateUsername({ username: req.body.username });
         if (usernameValidation.error) {
           res.status(400).json({ error: usernameValidation.error.issues[0].message });
           return;
         }
       }
       if (password) {
-        const passwordValidation = Validation.validatePassword({ password: req.body.password });
+        const passwordValidation = User.validatePassword({ password: req.body.password });
         if (passwordValidation.error) {
           res.status(400).json({ error: passwordValidation.error.issues[0].message });
           return;
         }
       }
       if (email) {
-        const emailValidation = Validation.validateEmail({ email: req.body.email });
+        const emailValidation = User.validateEmail({ email: req.body.email });
         if (emailValidation.error) {
           res.status(400).json({ error: emailValidation.error.issues[0].message });
           return;
@@ -366,21 +365,21 @@ class UserController {
       const { username, email, password, picture } = req.body;
 
       if (username) {
-        const usernameValidation = Validation.validateUsername({ username: req.body.username });
+        const usernameValidation = User.validateUsername({ username: req.body.username });
         if (usernameValidation.error) {
           res.status(400).json({ error: usernameValidation.error.issues[0].message });
           return;
         }
       }
       if (password) {
-        const passwordValidation = Validation.validatePassword({ password: req.body.password });
+        const passwordValidation = User.validatePassword({ password: req.body.password });
         if (passwordValidation.error) {
           res.status(400).json({ error: passwordValidation.error.issues[0].message });
           return;
         }
       }
       if (email) {
-        const emailValidation = Validation.validateEmail({ email: req.body.email });
+        const emailValidation = User.validateEmail({ email: req.body.email });
         if (emailValidation.error) {
           res.status(400).json({ error: emailValidation.error.issues[0].message });
           return;
@@ -458,7 +457,7 @@ class UserController {
       let { code } = req.body;
       const { email, newPassword } = req.body;
 
-      const result = Validation.validatePassword({ password: newPassword });
+      const result = User.validatePassword({ password: newPassword });
 
       if (result.error) {
         res.status(400).json({ error: result.error.issues[0].message });

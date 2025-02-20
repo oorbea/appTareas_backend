@@ -5,7 +5,6 @@ import User from '../models/user';
 import Notification from '../models/notification';
 import Task from '../models/task';
 import TaskList from '../models/taskList';
-import Validation from '../validations';
 
 dotenv.config();
 
@@ -65,7 +64,7 @@ class AdminController {
       return;
     }
     try {
-      const result = Validation.validateUser(req.body);
+      const result = User.validate(req.body);
       if (result.error) {
         res.status(400).json({ error: result.error.issues[0].message });
         return;

@@ -2,6 +2,7 @@ import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import { userSchema, usernameSchema, passwordSchema, emailSchema } from '../schemas/userSchema';
 
 dotenv.config();
 
@@ -39,6 +40,22 @@ class User extends Model<UserAttributes, Optional<UserAttributes, 'id' | 'pictur
   public async encryptPassword (password: string): Promise<void> {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(password, salt);
+  }
+
+  public static validate (user: object) {
+    return userSchema.safeParse(user);
+  }
+
+  public static validateUsername (username: object) {
+    return usernameSchema.safeParse(username);
+  }
+
+  public static validatePassword (password: object) {
+    return passwordSchema.safeParse(password);
+  }
+
+  public static validateEmail (email: object) {
+    return emailSchema.safeParse(email);
   }
 }
 

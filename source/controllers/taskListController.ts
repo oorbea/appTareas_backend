@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import TaskList from '../models/taskList';
-import Validation from '../validations';
 import User from '../models/user';
 import dotenv from 'dotenv';
 
@@ -16,7 +15,7 @@ class TaskListController {
     try {
       const user = req.user.id;
       const { name } = req.body;
-      const result = Validation.validateTaskListName({ name });
+      const result = TaskList.validateName({ name });
       if (result.error) {
         res.status(400).json({ error: result.error.issues[0].message });
         return;
@@ -49,7 +48,7 @@ class TaskListController {
     const user = parseInt(req.params.user);
 
     const { name } = req.body;
-    const result = Validation.validateTaskListName({ name });
+    const result = TaskList.validateName({ name });
     if (result.error) {
       res.status(400).json({ error: result.error.issues[0].message });
       return;
@@ -226,7 +225,7 @@ class TaskListController {
       const user = req.user.id;
       const { name } = req.body;
 
-      const result = Validation.validateTaskListName({ name });
+      const result = TaskList.validateName({ name });
       if (result.error) {
         res.status(400).json({ error: result.error.issues[0].message });
         return;
@@ -272,7 +271,7 @@ class TaskListController {
     try {
       const id = parseInt(req.params.id);
 
-      const result = Validation.validateTaskList(req.body);
+      const result = TaskList.validate(req.body);
       if (result.error) {
         res.status(400).json({ error: result.error.issues[0].message });
         return;

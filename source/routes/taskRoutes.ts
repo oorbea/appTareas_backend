@@ -422,14 +422,437 @@ router.put('/:id', authenticate, taskController.update);
  */
 router.patch('/title/:id', authenticate, taskController.updateTitle);
 
-// router.patch('/details/:id', authenticate, taskController.updateDetails);
-// router.patch('/deadline/:id', authenticate, taskController.updateDeadline);
-// router.patch('/parent/:id', authenticate, taskController.updateParent);
-// router.patch('/difficulty/:id', authenticate, taskController.updateDifficulty);
-// router.patch('/location/:id', authenticate, taskController.updateLocation);
-// router.patch('/list/:id', authenticate, taskController.updateList);
-// router.patch('/favourite/:id', authenticate, taskController.updateFavourite);
-// router.patch('/done/:id', authenticate, taskController.updateDone);
-// router.patch('/disable/:id', authenticate, taskController.disable);
+/**
+ * @swagger
+ * /prioritease_api/task/details/{id}:
+ *   patch:
+ *     summary: Actualiza solo los detalles de una tarea
+ *     description: Modifica los detalles de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               details:
+ *                 type: string
+ *                 example: Mi carro me lo robaron anoche cuando dormía...
+ *     responses:
+ *       200:
+ *         description: Los etalles de la tarea han sido actualizados correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/details/:id', authenticate, taskController.updateDetails);
+
+/**
+ * @swagger
+ * /prioritease_api/task/deadline/{id}:
+ *   patch:
+ *     summary: Actualiza solo la fecha límite de una tarea
+ *     description: Modifica la fecha límite de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               deadline:
+ *                 type: string
+ *                 format: date
+ *                 example: 2003-05-09
+ *     responses:
+ *       200:
+ *         description: La fecha límite de la tarea ha sido actualizada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/deadline/:id', authenticate, taskController.updateDeadline);
+
+/**
+ * @swagger
+ * /prioritease_api/task/parent/{id}:
+ *   patch:
+ *     summary: Actualiza solo la tarea padre de una tarea
+ *     description: Modifica la tarea padre de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               parent:
+ *                 type: integer
+ *                 example: 1234567890
+ *     responses:
+ *       200:
+ *         description: La tarea padre de la tarea ha sido actualizada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/parent/:id', authenticate, taskController.updateParent);
+
+/**
+ * @swagger
+ * /prioritease_api/task/difficulty/{id}:
+ *   patch:
+ *     summary: Actualiza solo la dificultad de una tarea
+ *     description: Modifica la dificultad de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               difficulty:
+ *                 type: integer
+ *                 example: 4
+ *     responses:
+ *       200:
+ *         description: La dificultad de la tarea ha sido actualizada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/difficulty/:id', authenticate, taskController.updateDifficulty);
+
+/**
+ * @swagger
+ * /prioritease_api/task/location/{id}:
+ *   patch:
+ *     summary: Actualiza solo la ubicación de una tarea
+ *     description: Modifica la ubicación de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               lat:
+ *                 type: number
+ *                 example: 12.42
+ *               lng:
+ *                 type: number
+ *                 example: -69
+ *     responses:
+ *       200:
+ *         description: La ubicación de la tarea ha sido actualizada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/location/:id', authenticate, taskController.updateLocation);
+
+/**
+ * @swagger
+ * /prioritease_api/task/list/{id}:
+ *   patch:
+ *     summary: Actualiza solo la lista de tareas de una tarea
+ *     description: Modifica la lista de tareas de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               list:
+ *                 type: integer
+ *                 example: 11
+ *     responses:
+ *       200:
+ *         description: La lista de tareas de la tarea ha sido actualizada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/list/:id', authenticate, taskController.updateList);
+
+/**
+ * @swagger
+ * /prioritease_api/task/favourite/{id}:
+ *   patch:
+ *     summary: Actualiza solo el favorito de una tarea
+ *     description: Modifica el favorito de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               favourite:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: El favorito de la tarea ha sido actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/favourite/:id', authenticate, taskController.updateFavourite);
+
+/**
+ * @swagger
+ * /prioritease_api/task/done/{id}:
+ *   patch:
+ *     summary: Actualiza solo el estado de una tarea
+ *     description: Modifica el estado de una tarea específica. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a actualizar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               done:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: El estado de la tarea ha sido actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/done/:id', authenticate, taskController.updateDone);
+
+/**
+ * @swagger
+ * /prioritease_api/task/disable/{id}:
+ *   patch:
+ *     summary: Deshabilita una tarea
+ *     description: Deshabilita una tarea específica en la base de datos. Se requiere autenticación mediante un token JWT.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la tarea a deshabilitar
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: La tarea ha sido deshabilitada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: No autorizado para actualizar la tarea
+ *       404:
+ *         description: Tarea no encontrada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/disable/:id', authenticate, taskController.disable);
 
 export default router;
