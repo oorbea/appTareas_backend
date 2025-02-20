@@ -197,6 +197,7 @@ class TaskController {
         ...req.query
       };
 
+      if (query.id) query.id = parseInt(query.id as unknown as string);
       if (query.parent) {
         query.parent = query.parent.toString().toLowerCase() === 'null' ? null : parseInt(query.parent as unknown as string);
       }
@@ -236,6 +237,7 @@ class TaskController {
         ...req.query
       };
 
+      if (query.id) query.id = parseInt(query.id as unknown as string);
       if (query.user) query.user = parseInt(query.user as unknown as string);
       if (query.parent) {
         query.parent = query.parent.toString().toLowerCase() === 'null' ? null : parseInt(query.parent as unknown as string);

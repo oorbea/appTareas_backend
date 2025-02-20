@@ -163,103 +163,194 @@ router.post('/', authenticate, taskController.createPublic);
 router.post('/:user', authenticate, taskController.createAdmin);
 
 /**
-   * @swagger
-   * /prioritease_api/task:
-   *   get:
-   *     summary: Obtiene las tareas habilitadas del usuario autenticado.
-   *     description: Permite a un usuario autenticado obtener todas sus tareas habilitadas.
-   *     tags:
-   *       - Tareas
-   *       - Public
-   *     security:
-   *       - bearerAuth: []
-   *     responses:
-   *       200:
-   *         description: Tareas habilitadas obtenidas exitosamente.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 type: object
-   *                 schema:
-   *                   $ref: "#/components/schemas/Task"
-   *       401:
-   *         description: Token no proporcionado o no válido.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: string
-   *                   example: Token no válido o caducado
-   *       500:
-   *         description: Error inesperado en el servidor.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: string
-   *                   example: Ha ocurrido un error inesperado en el servidor
-   */
+ * @swagger
+ * /prioritease_api/task:
+ *   get:
+ *     summary: Obtiene las tareas del usuario autenticado
+ *     description: |
+ *       Retorna una lista de tareas asociadas al usuario autenticado.
+ *       Se pueden aplicar filtros mediante query params para buscar tareas específicas.
+ *     tags:
+ *       - Tareas
+ *       - Public
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         description: ID único de la tarea
+ *       - in: query
+ *         name: title
+ *         schema:
+ *           type: string
+ *         description: Filtra por el título de la tarea
+ *       - in: query
+ *         name: details
+ *         schema:
+ *           type: string
+ *         description: Filtra por el contenido detallado de la tarea
+ *       - in: query
+ *         name: deadline
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filtra por fecha límite de la tarea (YYYY-MM-DD)
+ *       - in: query
+ *         name: parent
+ *         schema:
+ *           type: integer
+ *           nullable: true
+ *         description: ID de la tarea padre (si aplica)
+ *       - in: query
+ *         name: difficulty
+ *         schema:
+ *           type: integer
+ *         description: Nivel de dificultad de la tarea
+ *       - in: query
+ *         name: lat
+ *         schema:
+ *           type: number
+ *           nullable: true
+ *         description: Coordenada de latitud asociada a la tarea
+ *       - in: query
+ *         name: lng
+ *         schema:
+ *           type: number
+ *           nullable: true
+ *         description: Coordenada de longitud asociada a la tarea
+ *       - in: query
+ *         name: list
+ *         schema:
+ *           type: integer
+ *           nullable: true
+ *         description: ID de la lista a la que pertenece la tarea
+ *       - in: query
+ *         name: favourite
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar solo tareas marcadas como favoritas
+ *       - in: query
+ *         name: done
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar solo tareas completadas o pendientes
+ *     responses:
+ *       200:
+ *         description: Lista de tareas obtenida correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Algún parámetro de consulta no es válido
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: Token inválido o caducado
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
 router.get('/', authenticate, taskController.getMine);
 
 /**
-   * @swagger
-   * /prioritease_api/task/all:
-   *   get:
-   *     summary: Obtiene todas las tareas habilitadas.
-   *     description: Permite a un administrador autenticado obtener todas las tareas habilitadas.
-   *     tags:
-   *       - Tareas
-   *       - Admin
-   *     security:
-   *       - bearerAuth: []
-   *     responses:
-   *       200:
-   *         description: Tareas habilitadas obtenidas exitosamente.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 type: object
-   *                 schema:
-   *                   $ref: "#/components/schemas/Task"
-   *       401:
-   *         description: Token no proporcionado o no válido.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: string
-   *                   example: Token no válido o caducado
-   *       403:
-   *         description: No tienes permisos para acceder a esta ruta.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: string
-   *                   example: Token no válido o caducado
-   *       500:
-   *         description: Error inesperado en el servidor.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: string
-   *                   example: Ha ocurrido un error inesperado en el servidor
-   */
+ * @swagger
+ * /prioritease_api/task/all:
+ *   get:
+ *     summary: Obtiene todas las tareas (requiere permisos de administrador)
+ *     description: |
+ *       Retorna una lista con todas las tareas registradas en el sistema.
+ *       Solo accesible para administradores. Se pueden aplicar filtros mediante query params.
+ *     tags:
+ *       - Tareas
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         description: ID único de la tarea
+ *       - in: query
+ *         name: user
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario propietario de la tarea
+ *       - in: query
+ *         name: title
+ *         schema:
+ *           type: string
+ *         description: Filtra por el título de la tarea
+ *       - in: query
+ *         name: details
+ *         schema:
+ *           type: string
+ *         description: Filtra por el contenido detallado de la tarea
+ *       - in: query
+ *         name: deadline
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filtra por fecha límite de la tarea (YYYY-MM-DD)
+ *       - in: query
+ *         name: parent
+ *         schema:
+ *           type: integer
+ *           nullable: true
+ *         description: ID de la tarea padre (si aplica)
+ *       - in: query
+ *         name: difficulty
+ *         schema:
+ *           type: integer
+ *         description: Nivel de dificultad de la tarea
+ *       - in: query
+ *         name: lat
+ *         schema:
+ *           type: number
+ *           nullable: true
+ *         description: Coordenada de latitud asociada a la tarea
+ *       - in: query
+ *         name: lng
+ *         schema:
+ *           type: number
+ *           nullable: true
+ *         description: Coordenada de longitud asociada a la tarea
+ *       - in: query
+ *         name: list
+ *         schema:
+ *           type: integer
+ *           nullable: true
+ *         description: ID de la lista a la que pertenece la tarea
+ *       - in: query
+ *         name: favourite
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar solo tareas marcadas como favoritas
+ *       - in: query
+ *         name: done
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar solo tareas completadas o pendientes
+ *     responses:
+ *       200:
+ *         description: Lista de todas las tareas obtenida correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Task'
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: Acceso denegado (requiere permisos de administrador)
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
 router.get('/all', authenticate, taskController.getAll);
 
 /**

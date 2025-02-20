@@ -3,7 +3,8 @@ import db from '../db';
 import { taskDetailsSchema, taskSchema, taskTitleSchema, taskUserSchema, taskDeadlineSchema, taskParentSchema, taskDifficultySchema, taskLocationSchema, taskListSchema, taskFavouriteSchema, taskDoneSchema } from '../schemas/taskSchema';
 
 export interface TaskQuery {
-  user?: number | null;
+  id?: number;
+  user?: number;
   title?: string;
   details?: string | null;
   deadline?: Date | null;
