@@ -28,8 +28,12 @@ export const taskSchema = z.object({
     .optional()
     .default(1),
   lat: z.number({ message: 'La latitud debe ser un número' })
+    .min(-90, { message: 'La latitud debe ser un número mayor o igual a -90' })
+    .max(90, { message: 'La latitud debe ser un número menor o igual a 90' })
     .optional(),
   lng: z.number({ message: 'La longitud debe ser un número' })
+    .min(-180, { message: 'La longitud debe ser un número mayor o igual a -180' })
+    .max(180, { message: 'La longitud debe ser un número menor o igual a 180' })
     .optional(),
   list: z.number({ message: 'La lista debe ser un número' })
     .int({ message: 'La lista debe ser un número entero' })
@@ -86,8 +90,12 @@ export const taskDifficultySchema = z.object({
 
 export const taskLocationSchema = z.object({
   lat: z.number({ message: 'La latitud debe ser un número' })
+    .min(-90, { message: 'La latitud debe ser un número mayor o igual a -90' })
+    .max(90, { message: 'La latitud debe ser un número menor o igual a 90' })
     .nullable(),
   lng: z.number({ message: 'La longitud debe ser un número' })
+    .min(-180, { message: 'La longitud debe ser un número mayor o igual a -180' })
+    .max(180, { message: 'La longitud debe ser un número menor o igual a 180' })
     .nullable()
 });
 

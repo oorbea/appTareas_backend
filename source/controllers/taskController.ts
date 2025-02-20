@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import dotenv from 'dotenv';
-import Task from '../models/task';
+import { WhereOptions } from 'sequelize';
+import Task, { TaskAttributes, TaskQuery } from '../models/task';
 import TaskList from '../models/taskList';
 import User from '../models/user';
 
@@ -190,9 +191,31 @@ class TaskController {
 
     try {
       const user = req.user.id;
+      const query: TaskQuery = {
+        user,
+        enabled: true,
+        ...req.query
+      };
+
+      if (query.parent) {
+        query.parent = query.parent.toString().toLowerCase() === 'null' ? null : parseInt(query.parent as unknown as string);
+      }
+      if (query.difficulty) query.difficulty = parseInt(query.difficulty as unknown as string);
+      if (query.lat) {
+        query.lat = query.lat.toString().toLowerCase() === 'null' ? null : parseFloat(query.lat as unknown as string);
+      }
+      if (query.lng) {
+        query.lng = query.lng.toString().toLowerCase() === 'null' ? null : parseFloat(query.lng as unknown as string);
+      }
+      if (query.list) {
+        query.list = query.list.toString().toLowerCase() === 'null' ? null : parseInt(query.list as unknown as string);
+      }
+      if (query.favourite) query.favourite = query.favourite.toString().toLowerCase() === 'true';
+      if (query.done) query.done = query.done.toString().toLowerCase() === 'true';
+
       const tasks = await Task.findAll({
         attributes: ['id', 'user', 'title', 'details', 'deadline', 'parent', 'difficulty', 'lat', 'lng', 'list', 'favourite', 'done'],
-        where: { user, enabled: true }
+        where: query as WhereOptions<TaskAttributes>
       });
       res.status(200).json(tasks);
     } catch (error) {
@@ -208,9 +231,31 @@ class TaskController {
     }
 
     try {
+      const query: TaskQuery = {
+        enabled: true,
+        ...req.query
+      };
+
+      if (query.user) query.user = parseInt(query.user as unknown as string);
+      if (query.parent) {
+        query.parent = query.parent.toString().toLowerCase() === 'null' ? null : parseInt(query.parent as unknown as string);
+      }
+      if (query.difficulty) query.difficulty = parseInt(query.difficulty as unknown as string);
+      if (query.lat) {
+        query.lat = query.lat.toString().toLowerCase() === 'null' ? null : parseFloat(query.lat as unknown as string);
+      }
+      if (query.lng) {
+        query.lng = query.lng.toString().toLowerCase() === 'null' ? null : parseFloat(query.lng as unknown as string);
+      }
+      if (query.list) {
+        query.list = query.list.toString().toLowerCase() === 'null' ? null : parseInt(query.list as unknown as string);
+      }
+      if (query.favourite) query.favourite = query.favourite.toString().toLowerCase() === 'true';
+      if (query.done) query.done = query.done.toString().toLowerCase() === 'true';
+
       const tasks = await Task.findAll({
         attributes: ['id', 'user', 'title', 'details', 'deadline', 'parent', 'difficulty', 'lat', 'lng', 'list', 'favourite', 'done'],
-        where: { enabled: true }
+        where: query as WhereOptions<TaskAttributes>
       });
       res.status(200).json(tasks);
     } catch (error) {

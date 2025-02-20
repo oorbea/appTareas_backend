@@ -6,6 +6,14 @@ import { userSchema, usernameSchema, passwordSchema, emailSchema } from '../sche
 
 dotenv.config();
 
+export interface UserPayload {
+  id: number;
+  username: string;
+  email: string;
+  admin: boolean;
+  [key: string]: unknown;
+}
+
 interface UserAttributes {
   id: number;
   username: string;

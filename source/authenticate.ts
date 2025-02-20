@@ -1,19 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import User from './models/user';
+import User, { UserPayload } from './models/user';
 
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
-
-export interface UserPayload {
-  id: number;
-  username: string;
-  email: string;
-  admin: boolean;
-  [key: string]: unknown;
-}
 
 const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;

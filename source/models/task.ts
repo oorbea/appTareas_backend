@@ -2,7 +2,22 @@ import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
 import { taskDetailsSchema, taskSchema, taskTitleSchema, taskUserSchema, taskDeadlineSchema, taskParentSchema, taskDifficultySchema, taskLocationSchema, taskListSchema, taskFavouriteSchema, taskDoneSchema } from '../schemas/taskSchema';
 
-interface TaskAttributes {
+export interface TaskQuery {
+  user?: number | null;
+  title?: string;
+  details?: string | null;
+  deadline?: Date | null;
+  parent?: number | null;
+  difficulty?: number;
+  lat?: number | null;
+  lng?: number | null;
+  list?: number | null;
+  favourite?: boolean;
+  done?: boolean;
+  enabled?: boolean;
+}
+
+export interface TaskAttributes {
   id: number;
   user: number;
   title: string;
