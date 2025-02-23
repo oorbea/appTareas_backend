@@ -626,6 +626,57 @@ router.get('/name/:name', authenticate, TLController.getByName);
 router.patch('/disable/:id', authenticate, TLController.disable);
 
 /**
+ * @swagger
+ * /prioritease_api/task_list/disable/name/{name}:
+ *   patch:
+ *     summary: Deshabilita una lista de tareas específica.
+ *     description: Desactiva una lista de tareas en la base de datos. Solo el propietario de la lista puede realizar esta acción.
+ *     tags:
+ *       - Listas de Tareas
+ *       - Public
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Nombre de la lista de tareas a deshabilitar.
+ *     responses:
+ *       200:
+ *         description: Lista de tareas deshabilitada correctamente.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Lista de tareas deshabilitada correctamente"
+ *               taskList:
+ *                 id: 123
+ *                 name: "Tareas del Hogar"
+ *                 user: 12345
+ *                 enabled: false
+ *       401:
+ *         description: No se proporcionó token de autenticación.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Token no proporcionado"
+ *       404:
+ *         description: La lista de tareas no existe o ya está deshabilitada.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Lista de tareas no encontrada"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Ha ocurrido un error inesperado en el servidor"
+ */
+router.patch('/disable/name/:name', authenticate, TLController.disableByName);
+
+/**
    * @swagger
    * /prioritease_api/task_list/name/{id}:
    *   patch:

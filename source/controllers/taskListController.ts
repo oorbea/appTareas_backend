@@ -214,6 +214,38 @@ class TaskListController {
     }
   }
 
+  public async disableByName (req: Request, res: Response): Promise<void> {
+    const user = req.user;
+    if (!user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+
+    try {
+      const name = req.params.name;
+      const taskList = await TaskList.findOne({ where: { name, user: user.id } });
+
+      if (!taskList || !taskList.enabled) {
+        res.status(404).json({ error: 'Lista de tareas no encontrada' });
+        return;
+      }
+
+      await taskList.update({ enabled: false });
+      res.status(200).json({
+        message: 'Lista de tareas deshabilitada correctamente',
+        taskList: {
+          id: taskList.id,
+          name: taskList.name,
+          user: taskList.user,
+          enabled: taskList.enabled
+        }
+      });
+    } catch (error) {
+      console.error('Error al deshabilitar lista de tareas:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
+
   public async updateName (req: Request, res: Response): Promise<void> {
     if (!req.user) {
       res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
