@@ -4,7 +4,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 export const notificationSchema = z.object({
   when: z.string({ message: 'La fecha debe ser un string' })
     .date('La fecha debe ser una fecha')
-    .nonempty({ message: 'La fecha es obligatoria' }),
+    .refine(value => new Date(value) > new Date(Date.now()), { message: 'La fecha debe ser posterior a la actual' }),
   task: z.number({ message: 'La tarea debe ser un número' })
     .int({ message: 'La tarea debe ser un número entero' })
     .min(1, { message: 'La tarea debe ser un número mayor a 0' })
@@ -16,7 +16,7 @@ export const notificationSchema = z.object({
 export const notificationWhenSchema = z.object({
   when: z.string({ message: 'La fecha debe ser un string' })
     .date('La fecha debe ser una fecha')
-    .nonempty({ message: 'La fecha es obligatoria' })
+    .refine(value => new Date(value) > new Date(Date.now()), { message: 'La fecha debe ser posterior a la actual' })
 });
 
 export const notificationTaskSchema = z.object({
