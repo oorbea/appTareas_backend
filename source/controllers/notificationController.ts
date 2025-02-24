@@ -30,7 +30,7 @@ class NotificationController {
           return;
         }
         await existingNotification.update({ enabled: true });
-        res.status(200).json({
+        res.status(201).json({
           message: 'Notificación creada exitosamente',
           notification: {
             id: existingNotification.id,
