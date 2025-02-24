@@ -3,6 +3,9 @@ import db from '../db';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import { userSchema, usernameSchema, passwordSchema, emailSchema } from '../schemas/userSchema';
+import TaskList from './taskList';
+import Task from './task';
+import Notification from './notification';
 
 dotenv.config();
 
@@ -64,6 +67,17 @@ class User extends Model<UserAttributes, Optional<UserAttributes, 'id' | 'pictur
 
   public static validateEmail (email: object) {
     return emailSchema.safeParse(email);
+  }
+
+  public async disable (): Promise<void> {
+    const tasks = await Task.findAll({ where: { user: this.id } });
+    for (const task of tasks) {
+      await Notification.update({ enabled: false }, { where: { task: task.id } });
+    }
+    await Task.update({ enabled: false }, { where: { user: this.id } });
+    await TaskList.update({ enabled: false }, { where: { user: this.id } });
+    this.enabled = false;
+    await this.save();
   }
 }
 

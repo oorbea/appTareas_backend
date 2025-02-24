@@ -27,7 +27,10 @@ class UserController {
           res.status(409).json({ error: 'El correo electrónico ya está registrado con otra cuenta.' });
           return;
         }
-        await Notification.destroy({ where: { user: existingUser.id } });
+        const tasks = await Task.findAll({ where: { user: existingUser.id } });
+        for (const task of tasks) {
+          await Notification.destroy({ where: { task: task.id } });
+        }
         await Task.destroy({ where: { user: existingUser.id } });
         await TaskList.destroy({ where: { user: existingUser.id } });
         await User.destroy({ where: { email } });
@@ -93,7 +96,6 @@ class UserController {
   }
 
   public async disablePublic (req: Request, res: Response): Promise<void> {
-    // TODO: Cuando se deshabilita a un usuario, se debe deshabilitar también todas sus tareas, listas de tareas y notificaciones
     if (!req.user) {
       res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
       return;
@@ -107,7 +109,8 @@ class UserController {
         return;
       }
 
-      await user.update({ enabled: false });
+      await user.disable();
+
       res.status(200).json({
         message: 'Usuario dado de baja correctamente',
         user: {
@@ -125,20 +128,19 @@ class UserController {
   }
 
   public async disableAdmin (req: Request, res: Response): Promise<void> {
-    // TODO: Cuando se deshabilita a un usuario, se debe deshabilitar también todas sus tareas, listas de tareas y notificaciones
     if (!req.user || !req.user.admin) {
       res.status(403).json({ error: 'No tienes permisos para acceder a esta ruta' });
       return;
     }
     try {
-      const id: number = parseInt(req.params.id);
+      const id = parseInt(req.params.id);
       const user = await User.findByPk(id);
       if (!user) {
         res.status(404).json({ error: 'Usuario no encontrado' });
         return;
       }
 
-      await user.update({ enabled: false });
+      await user.disable();
       res.status(200).json({
         message: 'Usuario dado de baja correctamente',
         user: {
