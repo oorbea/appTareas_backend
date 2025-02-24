@@ -4,6 +4,7 @@ import swaggerUi from 'swagger-ui-express';
 import { userSchemaSwagger } from './schemas/userSchema';
 import { taskListSchemaSwagger } from './schemas/taskListSchema';
 import { taskSchemaSwagger } from './schemas/taskSchema';
+import { notificationSchemaSwagger } from './schemas/notificationSchema';
 
 dotenv.config();
 
@@ -45,8 +46,7 @@ const options = {
           ...taskListSchemaSwagger,
           example: {
             name: 'Tareas del hogar',
-            user: 1234567890,
-            enabled: true
+            user: 1234567890
           }
         },
         Task: {
@@ -62,6 +62,13 @@ const options = {
             list: 1234567890,
             favourite: false,
             done: false
+          }
+        },
+        Notification: {
+          ...notificationSchemaSwagger,
+          example: {
+            when: '2003-05-09T11:00:00.000Z',
+            task: 1234567890
           }
         }
       }

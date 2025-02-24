@@ -1,5 +1,6 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
+import { notificationSchema, notificationWhenSchema, notificationTaskSchema } from '../schemas/notificationSchema';
 
 interface NotificationAttributes {
   id: number;
@@ -12,8 +13,19 @@ class Notification extends Model<NotificationAttributes, Optional<NotificationAt
   public id!: number;
   public when!: Date;
   public task!: number;
-  public user!: number;
   public enabled!: boolean;
+
+  public static validate (notification: object) {
+    return notificationSchema.safeParse(notification);
+  }
+
+  public static validateWhen (when: object) {
+    return notificationWhenSchema.safeParse(when);
+  }
+
+  public static validateTask (task: object) {
+    return notificationTaskSchema.safeParse(task);
+  }
 
   public async disable (): Promise<void> {
     this.enabled = false;
