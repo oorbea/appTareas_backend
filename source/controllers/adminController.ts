@@ -30,7 +30,10 @@ class AdminController {
           return;
         }
 
-        await Notification.destroy({ where: { user: existingAdmin.id } });
+        const tasks = await Task.findAll({ where: { user: existingAdmin.id } });
+        for (const task of tasks) {
+          await Notification.destroy({ where: { task: task.id } });
+        }
         await Task.destroy({ where: { user: existingAdmin.id } });
         await TaskList.destroy({ where: { user: existingAdmin.id } });
         await User.destroy({ where: { email } });

@@ -5,7 +5,6 @@ interface NotificationAttributes {
   id: number;
   when: Date;
   task: number;
-  user: number;
   enabled: boolean;
 }
 
@@ -35,14 +34,6 @@ Notification.init({
     allowNull: false,
     references: {
       model: 'tasks',
-      key: 'id'
-    }
-  },
-  user: {
-    type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
-    allowNull: false,
-    references: {
-      model: 'users',
       key: 'id'
     }
   },
