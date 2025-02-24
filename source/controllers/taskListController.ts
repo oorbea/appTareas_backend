@@ -198,7 +198,7 @@ class TaskListController {
         res.status(403).json({ error: 'No tienes permisos para deshabilitar esta lista' });
         return;
       }
-      await taskList.update({ enabled: false });
+      await taskList.disable();
       res.status(200).json({
         message: 'Lista de tareas deshabilitada correctamente',
         taskList: {
@@ -230,7 +230,7 @@ class TaskListController {
         return;
       }
 
-      await taskList.update({ enabled: false });
+      await taskList.disable();
       res.status(200).json({
         message: 'Lista de tareas deshabilitada correctamente',
         taskList: {

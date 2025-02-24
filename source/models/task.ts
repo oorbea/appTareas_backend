@@ -1,6 +1,7 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
 import { taskDetailsSchema, taskSchema, taskTitleSchema, taskUserSchema, taskDeadlineSchema, taskParentSchema, taskDifficultySchema, taskLocationSchema, taskListSchema, taskFavouriteSchema, taskDoneSchema } from '../schemas/taskSchema';
+import Notification from './notification';
 
 export interface TaskQuery {
   id?: number;
@@ -91,6 +92,13 @@ class Task extends Model<TaskAttributes, Optional<TaskAttributes, 'id' | 'detail
 
   public static validateDone (done: object) {
     return taskDoneSchema.safeParse(done);
+  }
+
+  public async disable (): Promise<void> {
+    await Notification.update({ enabled: false }, { where: { task: this.id, enabled: true } });
+
+    this.enabled = false;
+    await this.save();
   }
 }
 

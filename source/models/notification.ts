@@ -14,6 +14,11 @@ class Notification extends Model<NotificationAttributes, Optional<NotificationAt
   public task!: number;
   public user!: number;
   public enabled!: boolean;
+
+  public async disable (): Promise<void> {
+    this.enabled = false;
+    await this.save();
+  }
 }
 
 Notification.init({

@@ -756,7 +756,7 @@ class TaskController {
         return;
       }
 
-      await task.update({ enabled: false });
+      await task.disable();
 
       res.status(200).json({ message: 'La tarea ha sido deshabilitada correctamente', task });
     } catch (error) {

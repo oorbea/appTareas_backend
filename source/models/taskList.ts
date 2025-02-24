@@ -1,6 +1,8 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
 import { taskListSchema, taskListNameSchema } from '../schemas/taskListSchema';
+import Notification from './notification';
+import Task from './task';
 
 interface TaskListAttributes {
   id: number;
@@ -21,6 +23,16 @@ class TaskList extends Model<TaskListAttributes, Optional<TaskListAttributes, 'i
 
   public static validateName (taskList: object) {
     return taskListNameSchema.safeParse(taskList);
+  }
+
+  public async disable (): Promise<void> {
+    const tasks = await Task.findAll({ where: { list: this.id, enabled: true } });
+    for (const task of tasks) {
+      await Notification.update({ enabled: false }, { where: { task: task.id, enabled: true } });
+      await task.disable();
+    }
+    this.enabled = false;
+    await this.save();
   }
 }
 
