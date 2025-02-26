@@ -112,4 +112,6 @@ router.post('/', authenticate, notCon.createPublic);
  */
 router.post('/:task', authenticate, notCon.createAdmin);
 
+router.get('/', authenticate, notCon.getMine);
+
 export default router;

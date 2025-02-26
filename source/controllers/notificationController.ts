@@ -112,6 +112,26 @@ class NotificationController {
       res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
     }
   }
+
+  public async getMine (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+    try {
+      const tasks = await Task.findAll({ where: { user: req.user.id, enabled: true } });
+      const taskIds = tasks.map(task => task.id);
+      let notifications: Notification[] = [];
+      for (const id of taskIds) {
+        const notis = await Notification.findAll({ where: { task: id, enabled: true } });
+        notifications = notifications.concat(notis);
+      }
+      res.status(200).json(notifications);
+    } catch (error) {
+      console.error('Error al obtener notificaciones: ', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
 }
 
 const notificationController = new NotificationController();
