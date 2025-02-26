@@ -2,6 +2,13 @@ import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
 import { notificationSchema, notificationWhenSchema, notificationTaskSchema } from '../schemas/notificationSchema';
 
+export interface NotificationQuery {
+  id?: number;
+  when?: Date;
+  task?: number;
+  enabled?: boolean;
+}
+
 interface NotificationAttributes {
   id: number;
   when: Date;

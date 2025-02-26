@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import dotenv from 'dotenv';
-import Notification from '../models/notification';
+import Notification, { NotificationQuery } from '../models/notification';
 import Task from '../models/task';
 
 dotenv.config();
@@ -119,12 +119,46 @@ class NotificationController {
       return;
     }
     try {
-      const tasks = await Task.findAll({ where: { user: req.user.id, enabled: true } });
+      const query: NotificationQuery = {
+        enabled: true,
+        ...req.query
+      };
+      if (query.id) {
+        query.id = parseInt(query.id as unknown as string);
+        const notification = await Notification.findByPk(query.id);
+        const tasks = await Task.findAll({ where: { user: req.user.id, enabled: true } });
+        const taskIds = tasks.map(task => task.id);
+        if (!notification || !notification.enabled || !taskIds.find(id => id === notification.task)) {
+          res.status(404).json({ error: 'La notificación no existe o está deshabilitada' });
+          return;
+        }
+        res.status(200).json(notification);
+        return;
+      }
+      let tasks: Task[] = [];
+      if (query.task) {
+        query.task = parseInt(query.task as unknown as string);
+        const t = await Task.findByPk(query.task);
+        if (!t || !t.enabled || t.user !== req.user.id) {
+          res.status(404).json({ error: 'La tarea no existe o está deshabilitada' });
+          return;
+        }
+        tasks.push(t);
+      } else {
+        tasks = await Task.findAll({ where: { user: req.user.id, enabled: true } });
+      }
       const taskIds = tasks.map(task => task.id);
       let notifications: Notification[] = [];
-      for (const id of taskIds) {
-        const notis = await Notification.findAll({ where: { task: id, enabled: true } });
-        notifications = notifications.concat(notis);
+      if (query.when) {
+        for (const id of taskIds) {
+          const notis = await Notification.findAll({ where: { task: id, when: query.when, enabled: true } });
+          notifications = notifications.concat(notis);
+        }
+      } else {
+        for (const id of taskIds) {
+          const notis = await Notification.findAll({ where: { task: id, enabled: true } });
+          notifications = notifications.concat(notis);
+        }
       }
       res.status(200).json(notifications);
     } catch (error) {
