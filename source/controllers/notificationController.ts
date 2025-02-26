@@ -132,7 +132,13 @@ class NotificationController {
           res.status(404).json({ error: 'La notificación no existe o está deshabilitada' });
           return;
         }
-        res.status(200).json(notification);
+        const notifications = [{
+          id: notification.id,
+          when: notification.when,
+          task: notification.task,
+          enabled: notification.enabled
+        }];
+        res.status(200).json(notifications);
         return;
       }
       let tasks: Task[] = [];
@@ -151,12 +157,18 @@ class NotificationController {
       let notifications: Notification[] = [];
       if (query.when) {
         for (const id of taskIds) {
-          const notis = await Notification.findAll({ where: { task: id, when: query.when, enabled: true } });
+          const notis = await Notification.findAll({
+            attributes: ['id', 'when', 'task', 'enabled'],
+            where: { task: id, when: query.when, enabled: true }
+          });
           notifications = notifications.concat(notis);
         }
       } else {
         for (const id of taskIds) {
-          const notis = await Notification.findAll({ where: { task: id, enabled: true } });
+          const notis = await Notification.findAll({
+            attributes: ['id', 'when', 'task', 'enabled'],
+            where: { task: id, enabled: true }
+          });
           notifications = notifications.concat(notis);
         }
       }
