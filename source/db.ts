@@ -37,14 +37,14 @@ class MySQLDatabase extends Database {
     }
   }
 
-  public async dropPascalCaseTables () {
+  public async dropWrongTables () {
     await this.sequelize.getQueryInterface().dropTable('Tasks');
     await this.sequelize.getQueryInterface().dropTable('TaskLists');
     await this.sequelize.getQueryInterface().dropTable('Users');
   }
 
   public async createTables () {
-    return this.sequelize.sync();
+    return this.sequelize.sync({ force: true });
   }
 
   public async dropTables () {
