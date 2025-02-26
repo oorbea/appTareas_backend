@@ -112,4 +112,66 @@ router.post('/', authenticate, notCon.createPublic);
  */
 router.post('/:task', authenticate, notCon.createAdmin);
 
+/**
+ * @swagger
+ * /prioritease_api/notification:
+ *   get:
+ *     summary: Obtiene las notificaciones del usuario autenticado
+ *     description: |
+ *       Recupera todas las notificaciones activas asociadas a las tareas del usuario autenticado.
+ *       Se pueden aplicar filtros por ID de notificación, ID de tarea o fecha.
+ *       Si se activa el filtro por id de notificación, se ignorarán los demás.
+ *     tags:
+ *       - Notificaciones
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         description: ID de la notificación a buscar
+ *       - in: query
+ *         name: task
+ *         schema:
+ *           type: integer
+ *         description: Filtra las notificaciones por ID de tarea
+ *       - in: query
+ *         name: when
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Filtra las notificaciones por fecha y hora en formato ISO 8601
+ *     responses:
+ *       200:
+ *         description: Lista de notificaciones recuperadas con éxito
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 123
+ *                   when:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2003-05-09T23:56:30Z"
+ *                   task:
+ *                     type: integer
+ *                     example: 456
+ *                   enabled:
+ *                     type: boolean
+ *                     example: true
+ *       401:
+ *         description: Usuario no autenticado
+ *       404:
+ *         description: La notificación o tarea no existe o está deshabilitada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.get('/', authenticate, notCon.getMine);
+
 export default router;
