@@ -19,15 +19,7 @@ const router = express.Router();
  *       required: true
  *       content:
  *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *                 description: Nombre de la lista de tareas.
- *                 example: "Tareas del Hogar"
+ *           $ref: '#/components/schemas/TaskList'
  *     responses:
  *       201:
  *         description: Lista de tareas creada exitosamente.
@@ -40,17 +32,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Lista de tareas creada exitosamente
  *                 taskList:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 1
- *                     name:
- *                       type: string
- *                       example: "Tareas del Hogar"
- *                     user:
- *                       type: integer
- *                       example: 123
+ *                   $ref: '#/components/schemas/TaskListComplete'
  *       400:
  *         description: Error de validación en los datos proporcionados.
  *         content:
@@ -126,15 +108,7 @@ router.post('/', authenticate, TLController.createPublic);
    *       required: true
    *       content:
    *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - name
-   *             properties:
-   *               name:
-   *                 type: string
-   *                 description: Nombre de la lista de tareas.
-   *                 example: "Tareas del Hogar"
+   *           $ref: '#/components/schemas/TaskList'
    *     responses:
    *       201:
    *         description: Lista de tareas creada exitosamente.
@@ -147,17 +121,7 @@ router.post('/', authenticate, TLController.createPublic);
    *                   type: string
    *                   example: Lista de tareas creada exitosamente
    *                 taskList:
-   *                   type: object
-   *                   properties:
-   *                     id:
-   *                       type: integer
-   *                       example: 1
-   *                     name:
-   *                       type: string
-   *                       example: "Tareas del Hogar"
-   *                     user:
-   *                       type: integer
-   *                       example: 123
+   *                   $ref: '#/components/schemas/TaskListComplete'
    *       400:
    *         description: Error de validación en los datos proporcionados.
    *         content:
@@ -230,20 +194,7 @@ router.post('/:user', authenticate, TLController.createAdmin);
    *             schema:
    *               type: array
    *               items:
-   *                 type: object
-   *                 properties:
-   *                   id:
-   *                     type: integer
-   *                     example: 1
-   *                   name:
-   *                     type: string
-   *                     example: "Tareas del Hogar"
-   *                   user:
-   *                     type: integer
-   *                     example: 123
-   *                   enabled:
-   *                     type: boolean
-   *                     example: true
+   *                 $ref: '#/components/schemas/TaskListComplete'
    *       401:
    *         description: Token no proporcionado o no válido.
    *         content:
@@ -303,20 +254,7 @@ router.get('/all', authenticate, TLController.getAll);
    *             schema:
    *               type: array
    *               items:
-   *                 type: object
-   *                 properties:
-   *                   id:
-   *                     type: integer
-   *                     example: 1
-   *                   name:
-   *                     type: string
-   *                     example: "Tareas del Hogar"
-   *                   user:
-   *                     type: integer
-   *                     example: 123
-   *                   enabled:
-   *                     type: boolean
-   *                     example: true
+   *                 $ref: '#/components/schemas/TaskListComplete'
    *       401:
    *         description: Token no proporcionado o no válido.
    *         content:
@@ -376,20 +314,7 @@ router.get('/user/:user', authenticate, TLController.getByUser);
    *             schema:
    *               type: array
    *               items:
-   *                 type: object
-   *                 properties:
-   *                   id:
-   *                     type: integer
-   *                     example: 1
-   *                   name:
-   *                     type: string
-   *                     example: "Tareas del Hogar"
-   *                   user:
-   *                     type: integer
-   *                     example: 123
-   *                   enabled:
-   *                     type: boolean
-   *                     example: true
+   *                 $ref: '#/components/schemas/TaskListComplete'
    *       401:
    *         description: Token no proporcionado o no válido.
    *         content:
@@ -442,20 +367,7 @@ router.get('/id/:id', authenticate, TLController.getById);
    *             schema:
    *               type: array
    *               items:
-   *                 type: object
-   *                 properties:
-   *                   id:
-   *                     type: integer
-   *                     example: 1
-   *                   name:
-   *                     type: string
-   *                     example: "Tareas del Hogar"
-   *                   user:
-   *                     type: integer
-   *                     example: 123
-   *                   enabled:
-   *                     type: boolean
-   *                     example: true
+   *                 $ref: '#/components/schemas/TaskListComplete'
    *       401:
    *         description: Token no proporcionado o no válido.
    *         content:
@@ -502,18 +414,7 @@ router.get('/', authenticate, TLController.getMine);
    *         description: Lista de tareas encontrada.
    *         content:
    *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 id:
-   *                   type: integer
-   *                   description: ID de la lista de tareas.
-   *                 name:
-   *                   type: string
-   *                   description: Nombre de la lista de tareas.
-   *                 user:
-   *                   type: integer
-   *                   description: ID del usuario propietario de la lista.
+   *             $ref: '#/components/schemas/TaskListComplete'
    *       401:
    *         description: Token no proporcionado.
    *         content:
@@ -580,13 +481,13 @@ router.get('/name/:name', authenticate, TLController.getByName);
  *         description: Lista de tareas deshabilitada correctamente.
  *         content:
  *           application/json:
- *             example:
- *               message: "Lista de tareas deshabilitada correctamente"
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 example: "Lista de tareas deshabilitada correctamente"
  *               taskList:
- *                 id: 123
- *                 name: "Tareas del Hogar"
- *                 user: 12345
- *                 enabled: false
+ *                 $ref: '#/components/schemas/TaskListComplete'
  *       400:
  *         description: ID no válido (si no es un número entero).
  *         content:
@@ -648,13 +549,13 @@ router.patch('/disable/:id', authenticate, TLController.disable);
  *         description: Lista de tareas deshabilitada correctamente.
  *         content:
  *           application/json:
- *             example:
- *               message: "Lista de tareas deshabilitada correctamente"
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 example: "Lista de tareas deshabilitada correctamente"
  *               taskList:
- *                 id: 123
- *                 name: "Tareas del Hogar"
- *                 user: 12345
- *                 enabled: false
+ *                 $ref: '#/components/schemas/TaskListComplete'
  *       401:
  *         description: No se proporcionó token de autenticación.
  *         content:
@@ -698,24 +599,20 @@ router.patch('/disable/name/:name', authenticate, TLController.disableByName);
    *       required: true
    *       content:
    *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               name:
-   *                 type: string
-   *                 example: "Mi nueva lista"
+   *           $ref: '#/components/schemas/TaskList'
    *           description: Nuevo nombre para la lista de tareas.
    *     responses:
    *       200:
    *         description: Nombre actualizado correctamente.
    *         content:
    *           application/json:
-   *             example:
-   *               message: "Nombre de la lista de tareas actualizado correctamente"
+   *             type: object
+   *             properties:
+   *               message:
+   *                 type: string
+   *                 example: "Nombre actualizado correctamente"
    *               taskList:
-   *                 id: 123
-   *                 name: "Mi nueva lista"
-   *                 user: 12345
+   *                 $ref: '#/components/schemas/TaskListComplete'
    *       400:
    *         description: Nombre no válido.
    *         content:
@@ -795,8 +692,13 @@ router.patch('/name/:id', authenticate, TLController.updateName);
    *         description: Lista de tareas actualizada correctamente.
    *         content:
    *           application/json:
-   *             example:
-   *               message: "Lista de tareas actualizada correctamente"
+   *             type: object
+   *             properties:
+   *               message:
+   *                 type: string
+   *                 example: "Lista de tareas actualizada correctamente"
+   *               taskList:
+   *                 $ref: '#/components/schemas/TaskListComplete'
    *       400:
    *         description: Datos de entrada no válidos.
    *         content:

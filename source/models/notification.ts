@@ -1,33 +1,59 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
-import { notificationSchema, notificationWhenSchema, notificationTaskSchema } from '../schemas/notificationSchema';
+import { notificationSchema, notificationScheduledTimeSchema, notificationTaskSchema } from '../schemas/notificationSchema';
+
+export enum NotificationStatus {
+  PENDING = 'pending',
+  SENT = 'sent',
+  FAILED = 'failed'
+}
+
+export enum NotificationType {
+  REMINDER = 'reminder',
+  DEADLINE = 'deadline',
+  RECURRING = 'recurring',
+  URGENT = 'urgent',
+  CUSTOM = 'custom'
+}
 
 export interface NotificationQuery {
   id?: number;
-  when?: Date;
+  scheduledTime?: Date;
   task?: number;
+  user?: number;
+  status?: NotificationStatus;
+  message?: string | null;
+  type?: NotificationType;
   enabled?: boolean;
 }
 
-interface NotificationAttributes {
+export interface NotificationAttributes {
   id: number;
-  when: Date;
+  scheduledTime: Date;
   task: number;
+  user: number;
+  status: NotificationStatus;
+  message: string | null;
+  type: NotificationType;
   enabled: boolean;
 }
 
 class Notification extends Model<NotificationAttributes, Optional<NotificationAttributes, 'id' | 'enabled'>> implements NotificationAttributes {
   public id!: number;
-  public when!: Date;
+  public scheduledTime!: Date;
   public task!: number;
+  public user!: number;
+  public status!: NotificationStatus;
+  public message!: string | null;
+  public type!: NotificationType;
   public enabled!: boolean;
 
   public static validate (notification: object) {
     return notificationSchema.safeParse(notification);
   }
 
-  public static validateWhen (when: object) {
-    return notificationWhenSchema.safeParse(when);
+  public static validateScheduledTime (scheduledTime: object) {
+    return notificationScheduledTimeSchema.safeParse(scheduledTime);
   }
 
   public static validateTask (task: object) {
@@ -46,7 +72,7 @@ Notification.init({
     primaryKey: true,
     autoIncrement: true
   },
-  when: {
+  scheduledTime: {
     type: DataTypes.DATE,
     allowNull: false,
     validate: {
@@ -61,6 +87,28 @@ Notification.init({
       key: 'id'
     }
   },
+  user: {
+    type: DataTypes.INTEGER.UNSIGNED.ZEROFILL,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
+  },
+  status: {
+    type: DataTypes.ENUM(NotificationStatus.PENDING, NotificationStatus.SENT, NotificationStatus.FAILED),
+    allowNull: false,
+    defaultValue: NotificationStatus.PENDING
+  },
+  message: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  type: {
+    type: DataTypes.ENUM(NotificationType.REMINDER, NotificationType.DEADLINE, NotificationType.RECURRING, NotificationType.URGENT, NotificationType.CUSTOM),
+    allowNull: false,
+    defaultValue: NotificationType.REMINDER
+  },
   enabled: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
@@ -72,7 +120,7 @@ Notification.init({
   indexes: [
     {
       unique: true,
-      fields: ['when', 'task']
+      fields: ['scheduledTime', 'task']
     }
   ]
 });
