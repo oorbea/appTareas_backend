@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 import { userSchema, usernameSchema, passwordSchema, emailSchema } from '../schemas/userSchema';
 import TaskList from './taskList';
 import Task from './task';
-import Notification from './notification';
 
 dotenv.config();
 

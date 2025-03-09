@@ -1,7 +1,6 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
 import { taskListSchema, taskListNameSchema } from '../schemas/taskListSchema';
-import Notification from './notification';
 import Task from './task';
 
 interface TaskListAttributes {
