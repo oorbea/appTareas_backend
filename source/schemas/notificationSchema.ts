@@ -3,6 +3,11 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { NotificationStatus, NotificationType } from '../models/notification';
 
 export const notificationSchema = z.object({
+  id: z.number({ message: 'El id debe ser un número' })
+    .int({ message: 'El id debe ser un número entero' })
+    .min(1, { message: 'El id debe ser un número mayor a 0' })
+    .max(9999999999, { message: 'El id debe ser un número de como mucho 10 dígitos' })
+    .optional(),
   scheduledTime: z.string({ message: 'La fecha debe ser un string' })
     .date('La fecha debe ser una fecha')
     .refine(value => new Date(value) > new Date(Date.now()), { message: 'La fecha debe ser posterior a la actual' }),
@@ -38,6 +43,16 @@ export const notificationTaskSchema = z.object({
     .int({ message: 'La tarea debe ser un número entero' })
     .min(1, { message: 'La tarea debe ser un número mayor a 0' })
     .max(9999999999, { message: 'La tarea debe ser un número de como mucho 10 dígitos' })
+});
+
+export const notificationMessageSchema = z.object({
+  message: z.string({ message: 'El mensaje debe ser un string' })
+    .max(255, { message: 'El mensaje debe tener como mucho 255 caracteres' })
+    .nullable()
+});
+
+export const notificationTypeSchema = z.object({
+  type: z.nativeEnum(NotificationType, { message: 'El tipo debe ser uno de: reminder | deadline | recurring | urgent | custom' })
 });
 
 export const notificationSchemaSwagger = zodToJsonSchema(notificationSchema.pick({

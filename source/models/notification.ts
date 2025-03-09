@@ -1,6 +1,6 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import db from '../db';
-import { notificationSchema, notificationScheduledTimeSchema, notificationTaskSchema } from '../schemas/notificationSchema';
+import { notificationSchema, notificationScheduledTimeSchema, notificationTaskSchema, notificationMessageSchema, notificationTypeSchema } from '../schemas/notificationSchema';
 
 export enum NotificationStatus {
   PENDING = 'pending',
@@ -58,6 +58,14 @@ class Notification extends Model<NotificationAttributes, Optional<NotificationAt
 
   public static validateTask (task: object) {
     return notificationTaskSchema.safeParse(task);
+  }
+
+  public static validateMessage (message: object) {
+    return notificationMessageSchema.safeParse(message);
+  }
+
+  public static validateType (type: object) {
+    return notificationTypeSchema.safeParse(type);
   }
 
   public async disable (): Promise<void> {

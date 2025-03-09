@@ -243,4 +243,46 @@ router.get('/', authenticate, notCon.getMine);
  */
 router.get('/all', authenticate, notCon.getAll);
 
+/**
+ * @swagger
+ * /prioritease_api/notification/{id}:
+ *   put:
+ *     summary: Actualiza una notificación existente
+ *     description: |
+ *       Permite modificar una notificación ya existente, siempre que pertenezca al usuario autenticado o que el usuario sea administrador.
+ *     tags:
+ *       - Notificaciones
+ *       - Public
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la notificación a actualizar
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           $ref: '#/components/schemas/Notification'
+ *     responses:
+ *       200:
+ *         description: Notificación actualizada con éxito
+ *         content:
+ *           application/json:
+ *             $ref: '#/components/schemas/NotificationComplete'
+ *       400:
+ *         description: Error en la validación de los datos de entrada
+ *       401:
+ *         description: Usuario no autenticado
+ *       404:
+ *         description: La notificación o tarea no existe o está deshabilitada
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.put('/:id', authenticate, notCon.update);
+
 export default router;

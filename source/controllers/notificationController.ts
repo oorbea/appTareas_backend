@@ -231,6 +231,80 @@ class NotificationController {
       res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
     }
   }
+
+  public async update (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+    try {
+      const id = parseInt(req.params.id);
+      const notification = await Notification.findByPk(id);
+      if (!notification || !notification.enabled || (notification.user !== req.user.id && !req.user.admin)) {
+        res.status(404).json({ error: 'La notificación no existe o está deshabilitada' });
+        return;
+      }
+
+      const { scheduledTime, task, message, type } = req.body;
+
+      if (scheduledTime) {
+        const result1 = Notification.validateScheduledTime(req.body);
+        if (result1.error) {
+          res.status(400).json({ error: result1.error.issues[0].message });
+          return;
+        }
+      }
+      let user: number | undefined;
+      if (task) {
+        const result2 = Notification.validateTask(req.body);
+        if (result2.error) {
+          res.status(400).json({ error: result2.error.issues[0].message });
+          return;
+        }
+        const existingTask = await Task.findByPk(task);
+        if (!existingTask || !existingTask.enabled || (existingTask.user !== req.user.id && !req.user.admin)) {
+          res.status(404).json({ error: 'La tarea no existe o está deshabilitada' });
+          return;
+        }
+        user = existingTask.user;
+      }
+      if (typeof message !== 'undefined') {
+        const result3 = Notification.validateMessage(req.body);
+        if (result3.error) {
+          res.status(400).json({ error: result3.error.issues[0].message });
+          return;
+        }
+      }
+      if (type) {
+        const result4 = Notification.validateType(req.body);
+        if (result4.error) {
+          res.status(400).json({ error: result4.error.issues[0].message });
+          return;
+        }
+      }
+
+      await notification.update({
+        scheduledTime: scheduledTime ?? notification.scheduledTime,
+        task: task ?? notification.task,
+        user: user ?? notification.user,
+        message: typeof message === 'undefined' ? notification.message : message,
+        type: type ?? notification.type
+      });
+      res.status(200).json({
+        id: notification.id,
+        scheduledTime: notification.scheduledTime,
+        task: notification.task,
+        user: notification.user,
+        status: notification.status,
+        message: notification.message,
+        type: notification.type,
+        enabled: notification.enabled
+      });
+    } catch (error) {
+      console.error('Error al actualizar notificación: ', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
 }
 
 const notificationController = new NotificationController();
