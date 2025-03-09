@@ -27,7 +27,7 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/Task"
+ *               $ref: "#/components/schemas/TaskComplete"
  *       400:
  *         description: Error de validación en los datos proporcionados.
  *         content:
@@ -108,7 +108,7 @@ router.post('/', authenticate, taskController.createPublic);
  *                   type: string
  *                   example: "Tarea creada exitosamente"
  *                 task:
- *                   $ref: '#/components/schemas/Task'
+ *                   $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Error de validación en la entrada de datos
  *         content:
@@ -244,7 +244,7 @@ router.post('/:user', authenticate, taskController.createAdmin);
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Task'
+ *                 $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Algún parámetro de consulta no es válido
  *       401:
@@ -343,7 +343,7 @@ router.get('/', authenticate, taskController.getMine);
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Task'
+ *                 $ref: '#/components/schemas/TaskComplete'
  *       401:
  *         description: Usuario no autenticado
  *       403:
@@ -377,35 +377,7 @@ router.get('/all', authenticate, taskController.getAll);
  *         description: Datos de la tarea obtenidos correctamente
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                 user:
- *                   type: integer
- *                 title:
- *                   type: string
- *                 details:
- *                   type: string
- *                 deadline:
- *                   type: string
- *                   format: date
- *                 parent:
- *                   type: integer
- *                   nullable: true
- *                 difficulty:
- *                   type: integer
- *                 lat:
- *                   type: number
- *                 lng:
- *                   type: number
- *                 list:
- *                   type: integer
- *                 favourite:
- *                   type: boolean
- *                 done:
- *                   type: boolean
+ *             $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: ID de tarea no proporcionado o inválido
  *       401:
@@ -450,7 +422,7 @@ router.get('/id/:id', authenticate, taskController.getById);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -499,7 +471,7 @@ router.put('/:id', authenticate, taskController.update);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -548,7 +520,7 @@ router.patch('/title/:id', authenticate, taskController.updateTitle);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -598,7 +570,7 @@ router.patch('/details/:id', authenticate, taskController.updateDetails);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -647,7 +619,7 @@ router.patch('/deadline/:id', authenticate, taskController.updateDeadline);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -696,7 +668,7 @@ router.patch('/parent/:id', authenticate, taskController.updateParent);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -748,7 +720,7 @@ router.patch('/difficulty/:id', authenticate, taskController.updateDifficulty);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -797,7 +769,7 @@ router.patch('/location/:id', authenticate, taskController.updateLocation);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -846,7 +818,7 @@ router.patch('/list/:id', authenticate, taskController.updateList);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -895,7 +867,7 @@ router.patch('/favourite/:id', authenticate, taskController.updateFavourite);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       400:
  *         description: Datos de entrada inválidos
  *       401:
@@ -934,7 +906,7 @@ router.patch('/done/:id', authenticate, taskController.updateDone);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Task'
+ *               $ref: '#/components/schemas/TaskComplete'
  *       401:
  *         description: Usuario no autenticado
  *       403:

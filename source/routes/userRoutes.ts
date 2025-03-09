@@ -18,31 +18,13 @@ const router = express.Router();
  *       required: true
  *       content:
  *         application/json:
- *           schema:
- *             $ref: "#/components/schemas/User"
+ *           $ref: "#/components/schemas/User"
  *     responses:
  *       201:
  *         description: Usuario registrado exitosamente
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                     username:
- *                       type: string
- *                     email:
- *                       type: string
- *                     picture:
- *                       type: string
- *                     enabled:
- *                       type: boolean
+ *             $ref: "#/components/schemas/UserComplete"
  *       400:
  *         description: Campos obligatorios faltantes
  *       409:
@@ -123,24 +105,7 @@ router.post('/login', uCon.login);
  *                   type: string
  *                   example: Usuario dado de baja correctamente
  *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                     username:
- *                       type: string
- *                     email:
- *                       type: string
- *                     picture:
- *                       type: string
- *                     enabled:
- *                       type: boolean
- *                   example:
- *                     id: 123
- *                     username: Spiderman
- *                     email: peter.parker@example.com
- *                     picture: public/profile_pictures/spiderman.jpg
- *                     enabled: false
+ *                   $ref: "#/components/schemas/UserComplete"
  *       401:
  *         description: No autorizado. El token no fue proporcionado o es inválido.
  *         content:
@@ -216,24 +181,7 @@ router.patch('/disable', authenticate, uCon.disablePublic);
  *                   type: string
  *                   example: Usuario dado de baja correctamente
  *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                     username:
- *                       type: string
- *                     email:
- *                       type: string
- *                     picture:
- *                       type: string
- *                     enabled:
- *                       type: boolean
- *                   example:
- *                     id: 123
- *                     username: Spiderman
- *                     email: peter.parker@example.com
- *                     picture: public/profile_pictures/spiderman.jpg
- *                     enabled: false
+ *                   $ref: "#/components/schemas/UserComplete"
  *       401:
  *         description: No autorizado. El token no fue proporcionado o es inválido.
  *         content:
@@ -684,30 +632,7 @@ router.put('/', authenticate, uCon.updatePublic);
    *       required: true
    *       content:
    *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               username:
-   *                 type: string
-   *                 description: Nombre de usuario
-   *                 required: false
-   *               email:
-   *                 type: string
-   *                 description: Correo electrónico del usuario
-   *                 required: false
-   *               password:
-   *                 type: string
-   *                 description: Contraseña del usuario
-   *                 required: false
-   *               picture:
-   *                 type: string
-   *                 description: URL de la imagen de perfil del usuario
-   *                 required: false
-   *             example:
-   *               username: batman
-   *               email: bruce.wayne@example.com
-   *               password: Newpassword123
-   *               picture: public/profile_pictures/new_example.jpg
+   *           $ref: "#/components/schemas/User"
    *     responses:
    *       200:
    *         description: Usuario actualizado exitosamente
@@ -720,18 +645,7 @@ router.put('/', authenticate, uCon.updatePublic);
    *                   type: string
    *                   example: Usuario actualizado exitosamente
    *                 user:
-   *                   type: object
-   *                   properties:
-   *                     id:
-   *                       type: integer
-   *                     username:
-   *                       type: string
-   *                     email:
-   *                       type: string
-   *                     picture:
-   *                       type: string
-   *                     enabled:
-   *                       type: boolean
+   *                   $ref: "#/components/schemas/UserComplete"
    *       400:
    *         description: Campos obligatorios faltantes
    *       401:

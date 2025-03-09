@@ -2,6 +2,11 @@ import z from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const taskSchema = z.object({
+  id: z.number({ message: 'El ID debe ser un número' })
+    .int({ message: 'El ID debe ser un número entero' })
+    .min(1, { message: 'El ID debe ser un número mayor a 0' })
+    .max(9999999999, { message: 'El ID debe ser un número de como mucho 10 dígitos' })
+    .optional(),
   title: z.string({ message: 'El título debe ser un string' })
     .max(50, { message: 'El título no puede exceder los 50 carácteres de longitud' })
     .nonempty({ message: 'El título es obligatorio' }),
@@ -115,4 +120,17 @@ export const taskDoneSchema = z.object({
   done: z.boolean({ message: 'El completado debe ser un booleano' })
 });
 
-export const taskSchemaSwagger = zodToJsonSchema(taskSchema);
+export const taskSchemaSwagger = zodToJsonSchema(taskSchema.pick({
+  title: true,
+  user: true,
+  details: true,
+  deadline: true,
+  parent: true,
+  difficulty: true,
+  lat: true,
+  lng: true,
+  list: true,
+  favourite: true,
+  done: true
+}));
+export const completeTaskSchemaSwagger = zodToJsonSchema(taskSchema);
