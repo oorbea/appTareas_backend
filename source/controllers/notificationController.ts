@@ -305,6 +305,38 @@ class NotificationController {
       res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
     }
   }
+
+  public async disable (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+    try {
+      const id = parseInt(req.params.id);
+      const notification = await Notification.findByPk(id);
+      if (!notification || !notification.enabled || (notification.user !== req.user.id && !req.user.admin)) {
+        res.status(404).json({ error: 'La notificación no existe o está deshabilitada' });
+        return;
+      }
+      await notification.disable();
+      res.status(200).json({
+        message: 'Notificación deshabilitada exitosamente',
+        notification: {
+          id: notification.id,
+          scheduledTime: notification.scheduledTime,
+          task: notification.task,
+          user: notification.user,
+          status: notification.status,
+          message: notification.message,
+          type: notification.type,
+          enabled: notification.enabled
+        }
+      });
+    } catch (error) {
+      console.error('Error al deshabilitar notificación: ', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
 }
 
 const notificationController = new NotificationController();
