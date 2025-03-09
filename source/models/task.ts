@@ -95,7 +95,10 @@ class Task extends Model<TaskAttributes, Optional<TaskAttributes, 'id' | 'detail
   }
 
   public async disable (): Promise<void> {
-    await Notification.update({ enabled: false }, { where: { task: this.id, enabled: true } });
+    const notifications = await Notification.findAll({ where: { task: this.id, enabled: true } });
+    for (const notification of notifications) {
+      await notification.disable();
+    }
 
     this.enabled = false;
     await this.save();

@@ -28,7 +28,6 @@ class TaskList extends Model<TaskListAttributes, Optional<TaskListAttributes, 'i
   public async disable (): Promise<void> {
     const tasks = await Task.findAll({ where: { list: this.id, enabled: true } });
     for (const task of tasks) {
-      await Notification.update({ enabled: false }, { where: { task: task.id, enabled: true } });
       await task.disable();
     }
     this.enabled = false;

@@ -70,12 +70,14 @@ class User extends Model<UserAttributes, Optional<UserAttributes, 'id' | 'pictur
   }
 
   public async disable (): Promise<void> {
+    const taskLists = await TaskList.findAll({ where: { user: this.id, enabled: true } });
+    for (const taskList of taskLists) {
+      await taskList.disable();
+    }
     const tasks = await Task.findAll({ where: { user: this.id, enabled: true } });
     for (const task of tasks) {
-      await Notification.update({ enabled: false }, { where: { task: task.id, enabled: true } });
       await task.disable();
     }
-    await TaskList.update({ enabled: false }, { where: { user: this.id, enabled: true } });
     this.enabled = false;
     await this.save();
   }
