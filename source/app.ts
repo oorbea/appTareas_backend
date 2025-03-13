@@ -5,6 +5,7 @@ import db from './db';
 import setupSwagger from './swagger';
 import routes from './routes/index';
 import adminController from './controllers/adminController';
+import SocketController from './controllers/socketController'; // TODO: Implementar
 
 dotenv.config();
 
