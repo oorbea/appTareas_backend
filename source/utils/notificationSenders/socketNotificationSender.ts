@@ -4,8 +4,10 @@ import Notification, { NotificationStatus } from '../../models/notification';
 import { WebSocketServer } from 'ws';
 
 class SocketNotificationSender implements NotificationSender {
+  name: string;
   protected wss: WebSocketServer;
-  constructor (wss: WebSocketServer) {
+  constructor (wss: WebSocketServer, name = 'SocketNotificationSender') {
+    this.name = name;
     this.wss = wss;
   }
 

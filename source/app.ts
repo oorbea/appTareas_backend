@@ -5,7 +5,7 @@ import db from './db';
 import setupSwagger from './swagger';
 import routes from './routes/index';
 import adminController from './controllers/adminController';
-import SocketController from './controllers/socketController'; // TODO: Implementar
+import SocketController from './controllers/socketController';
 
 dotenv.config();
 
@@ -52,4 +52,14 @@ async function buildAPI () {
   }
 }
 
+async function buildSocket () {
+  try {
+    const socketController = new SocketController();
+    socketController.authenticate();
+  } catch (error) {
+    console.error('Error building WebSocket:', error);
+  }
+}
+
 buildAPI();
+buildSocket();

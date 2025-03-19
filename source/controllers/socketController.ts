@@ -1,29 +1,54 @@
 import { WebSocketServer } from 'ws';
 import { CustomWebSocket } from '../../types/CustomWebSocket';
+import { webSocketMessageSchema, WebSocketMessage } from '../schemas/webSocketMessageSchema';
 import jwt from 'jsonwebtoken';
 import User, { UserPayload } from '../models/user';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-export interface WebSocketMessage {
-    type: 'notification' | 'welcome';
-    data?: object;
-}
-
 export default class SocketController {
   public wss: WebSocketServer;
   protected JWT_SECRET: string;
+  #heartbeatInterval: NodeJS.Timeout; // Intervalo para ping/pong
+
   constructor () {
     this.wss = new WebSocketServer({ port: 8080 });
     this.JWT_SECRET = process.env.JWT_SECRET as string;
+    this.#heartbeatInterval = this.#startHeartbeat();
+  }
 
-    this.authenticate();
+  #startHeartbeat (): NodeJS.Timeout {
+    const heartbeat = setInterval(() => {
+      this.wss.clients.forEach((ws: CustomWebSocket) => {
+        if (!ws.isAlive) {
+          console.log(`Cerrando conexión inactiva de ${ws.user?.username}`);
+          return ws.terminate();
+        }
+
+        ws.isAlive = false;
+        ws.ping();
+      });
+    }, 30000);
+    return heartbeat;
+  }
+
+  #setupConnectionHooks (ws: CustomWebSocket): void {
+    ws.on('pong', () => {
+      ws.isAlive = true;
+    });
+
+    ws.on('close', () => {
+      console.log(`Conexión cerrada para ${ws.user?.username}`);
+    });
   }
 
   public async authenticate (): Promise<void> {
     this.wss.on('connection', (ws: CustomWebSocket, req) => {
       console.log('Nuevo cliente conectado');
+
+      ws.isAlive = true;
+      this.#setupConnectionHooks(ws);
 
       const token = req.headers.authorization?.split(' ')[1];
 
@@ -53,8 +78,15 @@ export default class SocketController {
 
           ws.on('message', (rawMessage) => {
             try {
-              const message: WebSocketMessage = JSON.parse(rawMessage.toString());
-              console.log(`Mensaje recibido de ${decoded.username}: ${message}`);
+              const rawData = JSON.parse(rawMessage.toString());
+              const result = webSocketMessageSchema.safeParse(rawData);
+              if (!result.success) {
+                console.error('Mensaje inválido:', result.error);
+                ws.close(4005, 'Mensaje inválido');
+                return;
+              }
+              const message = result.data;
+              console.log(`Mensaje recibido de ${decoded.username}:\nTipo:${message.type}\nDatos:${JSON.stringify(message.data)}`);
             } catch (error) {
               console.error('Formato de mensaje inválido:', error);
               ws.close(4005, 'Formato de mensaje inválido');
@@ -68,5 +100,10 @@ export default class SocketController {
           ws.close(4004, 'Error inesperado al autenticar usuario');
         });
     });
+  }
+
+  public shutdown (): void {
+    clearInterval(this.#heartbeatInterval);
+    this.wss.close();
   }
 }

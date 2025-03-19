@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export default class FcmController {
-  protected admin;
+  public admin;
   protected projectId: string;
   protected clientEmail: string;
   protected privateKey: string;

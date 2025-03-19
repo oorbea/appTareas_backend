@@ -1,12 +1,21 @@
-import FcmController from '../../controllers/fcmController';
+import admin from 'firebase-admin';
+import { FirebaseMessagingError } from 'firebase-admin/lib/utils/error';
 import NotificationSender from './notificationSender';
 import Notification, { NotificationStatus } from '../../models/notification';
 import User from '../../models/user';
 
-class FcmNotificationSender extends FcmController implements NotificationSender {
+class FcmNotificationSender implements NotificationSender {
+  public name: string;
+  protected admin: admin.app.App;
+
+  constructor (admin: admin.app.App, name = 'FcmNotificationSender') {
+    this.name = name;
+    this.admin = admin;
+  }
+
   public async sendNotification (notification: Notification): Promise<void> {
+    const { user, message, type, task } = notification;
     try {
-      const { user, message, type, task } = notification;
       const userRecord = await User.findByPk(user);
       if (userRecord && userRecord.fcmToken) {
         await this.admin.messaging().send({
@@ -27,6 +36,9 @@ class FcmNotificationSender extends FcmController implements NotificationSender 
         await notification.update({ status: NotificationStatus.FAILED });
       }
     } catch (error) {
+      if (error instanceof FirebaseMessagingError && error.code === 'messaging/invalid-registration-token') {
+        await User.update({ fcmToken: null }, { where: { id: user } });
+      }
       console.error('Error al enviar notificación FCM:', error);
       await notification.update({ status: NotificationStatus.FAILED });
     }
