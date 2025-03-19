@@ -4,11 +4,13 @@ import NotificationSender from './notificationSender';
 import Notification, { NotificationStatus } from '../../models/notification';
 import User from '../../models/user';
 
+type adminType = typeof admin;
+
 class FcmNotificationSender implements NotificationSender {
   public name: string;
-  protected admin: admin.app.App;
+  protected admin: adminType;
 
-  constructor (admin: admin.app.App, name = 'FcmNotificationSender') {
+  constructor (admin: adminType, name = 'FcmNotificationSender') {
     this.name = name;
     this.admin = admin;
   }

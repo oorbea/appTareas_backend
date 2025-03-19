@@ -6,6 +6,8 @@ import setupSwagger from './swagger';
 import routes from './routes/index';
 import adminController from './controllers/adminController';
 import SocketController from './controllers/socketController';
+import FcmController from './controllers/fcmController';
+import NotificationScheduler from './utils/notificationScheduler';
 
 dotenv.config();
 
@@ -52,14 +54,25 @@ async function buildAPI () {
   }
 }
 
-async function buildSocket () {
+async function buildNotificationScheduler () {
   try {
     const socketController = new SocketController();
+    const fcmController = new FcmController();
+
     socketController.authenticate();
+
+    const scheduler = new NotificationScheduler(socketController, fcmController);
+    scheduler.start();
+
+    console.log('Scheduler de notificaciones iniciado 🕒');
   } catch (error) {
-    console.error('Error building WebSocket:', error);
+    console.error('Error building the notification service:', error);
   }
 }
 
-buildAPI();
-buildSocket();
+async function build () {
+  await buildAPI();
+  await buildNotificationScheduler();
+}
+
+build();
