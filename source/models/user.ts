@@ -141,7 +141,17 @@ User.init(
           user.password = await bcrypt.hash(user.password, salt);
         }
       }
-    }
+    },
+    indexes: [
+      {
+        name: 'idx_users_username',
+        fields: ['username']
+      },
+      {
+        name: 'idx_users_email',
+        fields: ['email']
+      }
+    ]
   }
 );
 

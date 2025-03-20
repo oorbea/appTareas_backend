@@ -67,6 +67,10 @@ TaskList.init(
         {
           unique: true,
           fields: ['user', 'name']
+        },
+        {
+          name: 'idx_tasklists_user',
+          fields: ['user']
         }
       ]
   }

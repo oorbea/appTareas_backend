@@ -129,6 +129,22 @@ Notification.init({
     {
       unique: true,
       fields: ['scheduledTime', 'task']
+    },
+    {
+      name: 'idx_notifications_user',
+      fields: ['user']
+    },
+    {
+      name: 'idx_notifications_scheduled_time',
+      fields: ['scheduledTime']
+    },
+    {
+      name: 'idx_notifications_user',
+      fields: ['user']
+    },
+    {
+      name: 'idx_notifications_user_status',
+      fields: ['user', 'status']
     }
   ]
 });
