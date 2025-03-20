@@ -2,6 +2,7 @@ import admin from 'firebase-admin';
 import NotificationSender from './notificationSender';
 import Notification, { NotificationStatus } from '../../models/notification';
 import User from '../../models/user';
+import Encrypter from '../encrypter';
 
 type adminType = typeof admin;
 
@@ -12,10 +13,12 @@ interface AdminError extends Error {
 class FcmNotificationSender implements NotificationSender {
   public name: string;
   protected admin: adminType;
+  protected encrypter: Encrypter;
 
-  constructor (admin: adminType, name = 'FcmNotificationSender') {
+  constructor (admin: adminType, name = 'FcmNotificationSender', encrypter: Encrypter = new Encrypter()) {
     this.name = name;
     this.admin = admin;
+    this.encrypter = encrypter;
   }
 
   public async sendNotification (notification: Notification): Promise<void> {
@@ -23,8 +26,9 @@ class FcmNotificationSender implements NotificationSender {
     try {
       const userRecord = await User.findByPk(user);
       if (userRecord && userRecord.fcmToken) {
+        const decryptedToken = this.encrypter.decrypt(userRecord.fcmToken);
         await this.admin.messaging().send({
-          token: userRecord.fcmToken,
+          token: decryptedToken,
           notification: {
             title: `Notificación de ${type}`,
             body: message || 'Tienes una nueva notificación'
@@ -50,7 +54,6 @@ class FcmNotificationSender implements NotificationSender {
     }
   }
 
-  // fcmNotificationSender.ts
   public async sendBatch (notifications: Notification[]): Promise<void> {
     const userId = notifications[0]?.user;
     try {
@@ -61,9 +64,9 @@ class FcmNotificationSender implements NotificationSender {
         );
         return;
       }
-
+      const decryptedToken = this.encrypter.decrypt(userRecord.fcmToken);
       await this.admin.messaging().send({
-        token: userRecord.fcmToken,
+        token: decryptedToken,
         notification: {
           title: `Tienes ${notifications.length} notificaciones nuevas`,
           body: notifications.map(n => n.message).join(', ')
