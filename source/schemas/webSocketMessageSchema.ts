@@ -2,7 +2,7 @@ import z from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const webSocketMessageSchema = z.object({
-  type: z.enum(['notification', 'welcome']),
+  type: z.enum(['notification', 'welcome', 'batch-notification']),
   data: z.record(z.unknown()).optional()
 });
 

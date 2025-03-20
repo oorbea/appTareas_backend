@@ -181,7 +181,25 @@ Task.init({
   }
 }, {
   sequelize: db.getSequelize(),
-  modelName: 'task'
+  modelName: 'task',
+  indexes: [
+    {
+      name: 'idx_tasks_user',
+      fields: ['user']
+    },
+    {
+      name: 'idx_tasks_user_title',
+      fields: ['user', 'title']
+    },
+    {
+      name: 'idx_tasks_user_favourite',
+      fields: ['user', 'favourite']
+    },
+    {
+      name: 'idx_tasks_user_list',
+      fields: ['user', 'list']
+    }
+  ]
 });
 
 export default Task;

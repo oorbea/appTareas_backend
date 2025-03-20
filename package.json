@@ -2,12 +2,12 @@
   "name": "prioritease_backend",
   "version": "1.0.0",
   "description": "Task gestor app with innovative design",
-  "main": "dist/app.js",
+  "main": "dist/source/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "dev": "nodemon dist/app.js",
-    "start": "node dist/app.js"
+    "dev": "nodemon dist/source/app.js",
+    "start": "node dist/source/app.js"
   },
   "repository": {
     "type": "git",

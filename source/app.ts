@@ -61,7 +61,7 @@ async function buildNotificationScheduler () {
 
     socketController.authenticate();
 
-    const scheduler = new NotificationScheduler(socketController, fcmController);
+    const scheduler = new NotificationScheduler(socketController, fcmController, 5);
     scheduler.start();
 
     console.log('Scheduler de notificaciones iniciado 🕒');
