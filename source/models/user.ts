@@ -146,10 +146,6 @@ User.init(
       {
         name: 'idx_users_username',
         fields: ['username']
-      },
-      {
-        name: 'idx_users_email',
-        fields: ['email']
       }
     ]
   }
