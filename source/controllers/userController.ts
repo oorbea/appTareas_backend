@@ -7,6 +7,7 @@ import TaskList from '../models/taskList';
 import Notification from '../models/notification';
 import Mailer from '../utils/emailSender';
 import generateRandomNum from '../utils/randomNumberGenerator';
+import Encrypter from '../utils/encrypter';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -576,7 +577,10 @@ class UserController {
         return;
       }
 
-      await user.update({ fcmToken: token });
+      const encrypter = new Encrypter();
+      const encryptedToken = encrypter.encrypt(token);
+
+      await user.update({ fcmToken: encryptedToken });
 
       res.status(200).json({ message: 'Token actualizado correctamente' });
     } catch (error) {
