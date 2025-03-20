@@ -26,6 +26,7 @@ interface UserAttributes {
   resetPasswordCode?: number | null;
   resetPasswordExpires?: Date | null;
   admin: boolean;
+  fcmToken: string | null;
 }
 
 class User extends Model<UserAttributes, Optional<UserAttributes, 'id' | 'picture' | 'enabled' | 'resetPasswordCode' | 'resetPasswordExpires' | 'admin'>> implements UserAttributes {
@@ -38,6 +39,7 @@ class User extends Model<UserAttributes, Optional<UserAttributes, 'id' | 'pictur
   public resetPasswordCode!: number | null;
   public resetPasswordExpires!: Date | null;
   public admin!: boolean;
+  public fcmToken!: string | null;
 
   #ADMIN_EMAIL = process.env.ADMIN_EMAIL;
   #ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -123,6 +125,10 @@ User.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    fcmToken: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   },
   {

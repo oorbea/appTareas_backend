@@ -562,6 +562,28 @@ class UserController {
       res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
     }
   }
+
+  public async updateFCMToken (req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({ error: 'No tienes permisos para acceder a esta ruta' });
+      return;
+    }
+    try {
+      const { token } = req.body;
+      const user = await User.findByPk(req.user.id);
+      if (!user) {
+        res.status(404).json({ error: 'Usuario no encontrado' });
+        return;
+      }
+
+      await user.update({ fcmToken: token });
+
+      res.status(200).json({ message: 'Token actualizado correctamente' });
+    } catch (error) {
+      console.error('Error al actualizar el token:', error);
+      res.status(500).json({ error: 'Ha ocurrido un error inesperado en el servidor' });
+    }
+  }
 }
 
 const userController = new UserController();

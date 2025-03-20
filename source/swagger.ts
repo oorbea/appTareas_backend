@@ -5,6 +5,7 @@ import { completeUserSchemaSwagger, userSchemaSwagger } from './schemas/userSche
 import { completeTaskListSchemaSwagger, taskListSchemaSwagger } from './schemas/taskListSchema';
 import { taskSchemaSwagger, completeTaskSchemaSwagger } from './schemas/taskSchema';
 import { notificationSchemaSwagger, completeNotificationSchemaSwagger } from './schemas/notificationSchema';
+import { webSocketMessageSchemaSwagger } from './schemas/webSocketMessageSchema';
 
 dotenv.config();
 
@@ -125,6 +126,19 @@ const options = {
             message: 'Recuerda comprar la leche',
             type: 'reminder',
             enabled: true
+          }
+        },
+        WebSocketMessage: {
+          ...webSocketMessageSchemaSwagger,
+          example: {
+            type: 'notification',
+            notification: {
+              id: 1234567890,
+              scheduledTime: '2003-05-09T11:00:00.000Z',
+              task: 1234567890,
+              message: 'Recuerda comprar la leche',
+              type: 'reminder'
+            }
           }
         }
       }

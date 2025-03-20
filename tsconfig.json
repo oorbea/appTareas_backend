@@ -7,6 +7,7 @@
     "esModuleInterop": true, // Permitir la interoperabilidad entre CommonJS y ES Modules
     "skipLibCheck": true, // Omitir la verificación de tipos en archivos de declaración
     "forceConsistentCasingInFileNames": true, // Forzar consistencia en mayúsculas/minúsculas en nombres de archivos
+    "resolveJsonModule": true, // Permitir la importación de archivos JSON
     "typeRoots": ["./node_modules/@types", "./types"], // Carpeta de definiciones de tipos
   },
   "include": ["source/**/*", "types"], // Incluir todos los archivos en la carpeta source

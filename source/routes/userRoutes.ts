@@ -952,4 +952,50 @@ router.get('/all', authenticate, uCon.getAllAdmin);
  */
 router.get('/', authenticate, uCon.getPublic);
 
+/**
+ * @swagger
+ * /prioritease_api/user/fcm_token:
+ *   patch:
+ *     summary: Actualiza el token FCM del usuario autenticado
+ *     description: |
+ *       Permite actualizar el token de Firebase Cloud Messaging (FCM) del usuario autenticado para recibir notificaciones push.
+ *     tags:
+ *       - Usuarios
+ *       - Public
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Nuevo token de FCM del usuario
+ *             required:
+ *               - token
+ *     responses:
+ *       200:
+ *         description: Token actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Token actualizado correctamente
+ *       401:
+ *         description: Usuario no autenticado
+ *       403:
+ *         description: Token no válido o caducado
+ *       404:
+ *         description: Usuario no encontrado
+ *       500:
+ *         description: Error inesperado en el servidor
+ */
+router.patch('/fcm_token', authenticate, uCon.updateFCMToken);
+
 export default router;
